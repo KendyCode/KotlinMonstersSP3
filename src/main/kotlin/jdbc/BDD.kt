@@ -13,9 +13,9 @@ import java.sql.*
  */
 class BDD(
 
-    var url: String = "jdbc:mysql://localhost:3306/db_Monsters_monLogin",
-    var user: String = "root",
-    var password: String = "",
+    var url: String = "jdbc:mysql://172.16.0.210:3306/bd_monsters_kmilius",
+    var user: String = "kmilius",
+    var password: String = "Vomsyf32",
 ) {
     var connectionBDD: Connection? = null
 

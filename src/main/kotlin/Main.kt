@@ -6,6 +6,9 @@ import org.example.dresseur.Entraineur
 import monstre.EspeceMonstre
 import monstre.IndividuMonstre
 import jeu.Partie
+import jdbc.BDD
+
+val db = BDD()
 
 
 var joueur = Entraineur(1, "Sacha", 100)
@@ -36,6 +39,8 @@ fun main() {
 
     val partie = nouvellePartie()
     partie.choixStarter()
+    db.close()
+
     partie.jouer()
 
 }
