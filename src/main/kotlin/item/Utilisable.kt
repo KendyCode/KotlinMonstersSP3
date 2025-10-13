@@ -1,5 +1,7 @@
 package item
 import monstre.IndividuMonstre
+import org.example.dresseur.Entraineur
+
 /**
  * Interface définissant le comportement d'un objet ou d'une action
  * pouvant être utilisé(e) sur un [IndividuMonstre].
@@ -12,9 +14,10 @@ interface Utilisable {
     /**
      * Applique l'effet de l'objet ou de l'action sur le monstre cible.
      *
+     * @param joueur L’entraîneur qui utilise l’objet.
      * @param cible Le [IndividuMonstre] sur lequel l'objet est utilisé.
      * @return `true` si l'action a eu un effet (ex. : capture réussie, soin appliqué),
      *         `false` sinon.
      */
-    fun utiliser(cible: IndividuMonstre): Boolean
+    fun utiliser(cible: IndividuMonstre,joueur: Entraineur): Boolean
 }

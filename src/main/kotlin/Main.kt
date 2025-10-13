@@ -1,4 +1,5 @@
-
+import DAO.EntraineurDAO
+import DAO.EspeceMonstreDAO
 import item.Badge
 import item.MonsterKube
 import monde.Zone
@@ -8,7 +9,19 @@ import monstre.IndividuMonstre
 import jeu.Partie
 import jdbc.BDD
 
+//La connexion a la BDD
 val db = BDD()
+//Les DAO
+val entraineurDAO= EntraineurDAO(db)
+val especeMonstreDAO = EspeceMonstreDAO(db) // 👈 ajout du DAO pour les espèces
+
+// --- Listes depuis la BDD ---
+val listeEntraineur = entraineurDAO.findAll()
+val listeEspeces = especeMonstreDAO.findAll() // 👈 ta nouvelle variable
+
+
+
+
 
 
 var joueur = Entraineur(1, "Sacha", 100)
@@ -33,23 +46,33 @@ var objet1 = MonsterKube(1,"cube", "description",11.0)
 
 fun main() {
 
+    fun nouvellePartie():Partie{
+        println("Bienvenue dans le monde magique des Pokémon!")
+        println("Rentrez votre nom : ")
+        val nomJoueur = readln()
+        val PartieJoueur = Partie(1,joueur,route1)
+        joueur.id=0
+        entraineurDAO.save(joueur)
+        return PartieJoueur
+    }
+
     route1.zoneSuivante = route2
     route2.zonePrecedente = route1
     joueur.sacAItems.add(objet1)
 
     val partie = nouvellePartie()
+
+
+
+
     partie.choixStarter()
     db.close()
 
     partie.jouer()
 
+
+
 }
 
-fun nouvellePartie():Partie{
-    println("Bienvenue dans le monde magique des Pokémon! Mon nom est ChenZen! Les gens souvent m'appellent le Prof Pokémon! Ce monde est peuplé de créatures du nom de Pokémon!")
-    println("Rentrez votre nom : ")
-    val nomJoueur = readln()
-    val PartieJoueur = Partie(1,joueur,route1)
-    return PartieJoueur
-}
+
 

@@ -62,5 +62,5 @@ class EspeceMonstre(
         val safeArt = art.replace("/", "∕")
         return safeArt.replace("\\u001B", "\u001B")
     }
-    }
+}
 
