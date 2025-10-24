@@ -100,15 +100,16 @@ class EntraineurDAO(val bdd: BDD = db) {
      */
     fun save(entraineur: Entraineur): Entraineur? {
         val requetePreparer: PreparedStatement
+        val isInsert = entraineur.id == 0
 
-        if (entraineur.id == 0) {
-            // Insertion
+        if (isInsert) {
+            // 🟢 Insertion
             val sql = "INSERT INTO Entraineurs (nom, argents) VALUES (?, ?)"
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             requetePreparer.setString(1, entraineur.nom)
             requetePreparer.setInt(2, entraineur.argents)
         } else {
-            // Mise à jour
+            // 🟡 Mise à jour
             val sql = "UPDATE Entraineurs SET nom = ?, argents = ? WHERE id = ?"
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
             requetePreparer.setString(1, entraineur.nom)
@@ -119,9 +120,13 @@ class EntraineurDAO(val bdd: BDD = db) {
         val nbLigneMaj = requetePreparer.executeUpdate()
 
         if (nbLigneMaj > 0) {
-            val generatedKeys = requetePreparer.generatedKeys
-            if (generatedKeys.next()) {
-                entraineur.id = generatedKeys.getInt(1)
+            // 🔑 Récupération de la clé générée uniquement si insertion
+            if (isInsert) {
+                val generatedKeys = requetePreparer.generatedKeys
+                if (generatedKeys.next()) {
+                    entraineur.id = generatedKeys.getInt(1)
+                }
+                generatedKeys.close()
             }
             requetePreparer.close()
             return entraineur

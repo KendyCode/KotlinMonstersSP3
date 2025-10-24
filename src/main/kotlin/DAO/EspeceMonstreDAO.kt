@@ -151,18 +151,17 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
      * Insère ou met à jour une espèce de monstre.
      */
     fun save(espece: EspeceMonstre): EspeceMonstre? {
-        val requetePreparer: PreparedStatement
-
         if (espece.id == 0) {
+            // 🆕 Insertion
             val sql = """
-                INSERT INTO EspecesMonstre 
-                (nom, type, baseAttaque, baseDefense, baseVitesse, baseAttaqueSpe, baseDefenseSpe, basePv,
-                 modAttaque, modDefense, modVitesse, modAttaqueSpe, modDefenseSpe, modPv,
-                 description, particularites, caracteres)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """.trimIndent()
+            INSERT INTO EspecesMonstre 
+            (nom, type, baseAttaque, baseDefense, baseVitesse, baseAttaqueSpe, baseDefenseSpe, basePv,
+             modAttaque, modDefense, modVitesse, modAttaqueSpe, modDefenseSpe, modPv,
+             description, particularites, caracteres)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """.trimIndent()
 
-            requetePreparer = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+            val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             requetePreparer.setString(1, espece.nom)
             requetePreparer.setString(2, espece.type)
             requetePreparer.setInt(3, espece.baseAttaque)
@@ -180,16 +179,27 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
             requetePreparer.setString(15, espece.description)
             requetePreparer.setString(16, espece.particularites)
             requetePreparer.setString(17, espece.caracteres)
-        } else {
-            val sql = """
-                UPDATE EspecesMonstre SET 
-                    nom=?, type=?, baseAttaque=?, baseDefense=?, baseVitesse=?, baseAttaqueSpe=?, baseDefenseSpe=?, basePv=?,
-                    modAttaque=?, modDefense=?, modVitesse=?, modAttaqueSpe=?, modDefenseSpe=?, modPv=?,
-                    description=?, particularites=?, caracteres=?
-                WHERE id=?
-            """.trimIndent()
 
-            requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
+            val nbLigneMaj = requetePreparer.executeUpdate()
+            if (nbLigneMaj > 0) {
+                val generatedKeys = requetePreparer.generatedKeys
+                if (generatedKeys.next()) {
+                    espece.id = generatedKeys.getInt(1)
+                }
+            }
+            requetePreparer.close()
+            return espece
+        } else {
+            // 🔄 Mise à jour
+            val sql = """
+            UPDATE EspecesMonstre SET 
+                nom=?, type=?, baseAttaque=?, baseDefense=?, baseVitesse=?, baseAttaqueSpe=?, baseDefenseSpe=?, basePv=?,
+                modAttaque=?, modDefense=?, modVitesse=?, modAttaqueSpe=?, modDefenseSpe=?, modPv=?,
+                description=?, particularites=?, caracteres=?
+            WHERE id=?
+        """.trimIndent()
+
+            val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
             requetePreparer.setString(1, espece.nom)
             requetePreparer.setString(2, espece.type)
             requetePreparer.setInt(3, espece.baseAttaque)
@@ -208,20 +218,12 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
             requetePreparer.setString(16, espece.particularites)
             requetePreparer.setString(17, espece.caracteres)
             requetePreparer.setInt(18, espece.id)
-        }
 
-        val nbLigneMaj = requetePreparer.executeUpdate()
-        if (nbLigneMaj > 0) {
-            val generatedKeys = requetePreparer.generatedKeys
-            if (generatedKeys.next()) {
-                espece.id = generatedKeys.getInt(1)
-            }
+            val nbLigneMaj = requetePreparer.executeUpdate()
             requetePreparer.close()
-            return espece
-        }
 
-        requetePreparer.close()
-        return null
+            return if (nbLigneMaj > 0) espece else null
+        }
     }
 
     /**

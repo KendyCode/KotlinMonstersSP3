@@ -6,6 +6,7 @@ import especeMonstreDAO
 import jdbc.BDD
 import monstre.EspeceMonstre
 import monstre.IndividuMonstre
+import monstre.IndividuMonstreEntity
 
 import java.sql.PreparedStatement
 import java.sql.SQLException
@@ -21,40 +22,18 @@ import java.sql.Statement
  *
  * @param bdd L'objet de connexion à la base de données.
  */
-class IndividuMonstreDAO(val bdd: BDD) {
-    val entraineurDao =entraineurDAO
-    val especeDao = especeMonstreDAO
+class IndividuMonstreDAO(val bdd: BDD = db) {
 
-    /**
-     * Récupère toutes les espèces présentes dans la base de données.
-     *
-     * @return Une liste mutable d'entraîneurs trouvés.
-     */
-    fun findAll(): MutableList<IndividuMonstre> {
-        val result = mutableListOf<IndividuMonstre>()
+    // --- FIND ALL ---
+    fun findAll(): MutableList<IndividuMonstreEntity> {
+        val result = mutableListOf<IndividuMonstreEntity>()
         val sql = "SELECT * FROM IndividuMonstre"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
         val resultatRequete = bdd.executePreparedStatement(requetePreparer)
+
         if (resultatRequete != null) {
             while (resultatRequete.next()) {
-                val id = resultatRequete.getInt("id")
-                val nom = resultatRequete.getString("nom")
-                val idEspece = resultatRequete.getInt("fk_espece_id")
-                val idEntraineur = resultatRequete.getInt("fk_entraineur_equipe_id")
-                val niveau = resultatRequete.getInt("niveau")
-                val attaque = resultatRequete.getInt("attaque")
-                val defense = resultatRequete.getInt("defense")
-                val vitesse = resultatRequete.getInt("vitesse")
-                val attaqueSpe = resultatRequete.getInt("attaqueSpe")
-                val defenseSpe = resultatRequete.getInt("defenseSpe")
-                val pvMax = resultatRequete.getInt("pvMax")
-                val potentiel = resultatRequete.getDouble("potentiel")
-                val exp = resultatRequete.getDouble("exp")
-                val pv = resultatRequete.getInt("pv")
-
-                val espece = especeDao.findById(idEspece)!!
-                val entraineur = entraineurDao.findById((idEntraineur))!!
-                result.add(IndividuMonstre(id, nom, espece,entraineur,0.0))
+                result.add(mapResultSet(resultatRequete))
             }
         }
 
@@ -62,54 +41,24 @@ class IndividuMonstreDAO(val bdd: BDD) {
         return result
     }
 
-
-    /**
-     * Recherche une espece par son identifiant unique.
-     *
-     * @param id L'identifiant de l'espece.
-     * @return L'espece trouvé ou `null` si aucun résultat.
-     */
-    fun findById(id: Int): IndividuMonstre? {
-        var result: IndividuMonstre? = null
-        val sql = "SELECT * FROM EspeceMonstre WHERE id = ?"
+    // --- FIND BY ID ---
+    fun findById(id: Int): IndividuMonstreEntity? {
+        val sql = "SELECT * FROM IndividuMonstre WHERE id = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
-        requetePreparer.setInt(1, id) // insere la valeur de l'id dans la requete preparer
+        requetePreparer.setInt(1, id)
         val resultatRequete = bdd.executePreparedStatement(requetePreparer)
 
-        if (resultatRequete != null && resultatRequete.next()) {
-            val id = resultatRequete.getInt("id")
-            val nom = resultatRequete.getString("nom")
-            val idEspece = resultatRequete.getInt("fk_espece_id")
-            val idEntraineur = resultatRequete.getInt("fk_entraineur_equipe_id")
-            val niveau = resultatRequete.getInt("niveau")
-            val attaque = resultatRequete.getInt("attaque")
-            val defense = resultatRequete.getInt("defense")
-            val vitesse = resultatRequete.getInt("vitesse")
-            val attaqueSpe = resultatRequete.getInt("attaqueSpe")
-            val defenseSpe = resultatRequete.getInt("defenseSpe")
-            val pvMax = resultatRequete.getInt("pvMax")
-            val potentiel = resultatRequete.getDouble("potentiel")
-            val exp = resultatRequete.getDouble("exp")
-            val pv = resultatRequete.getInt("pv")
-
-            val espece = especeDao.findById(idEspece)!!
-            val entraineur = entraineurDao.findById((idEntraineur))!!
-            result = IndividuMonstre(id, nom, espece, entraineur, 0.0)
-        }
+        val espece = if (resultatRequete != null && resultatRequete.next()) {
+            mapResultSet(resultatRequete)
+        } else null
 
         requetePreparer.close()
-        return result
+        return espece
     }
 
-
-    /**
-     * Recherche une espece par son nom.
-     *
-     * @param nomRechercher Le nom de l'espece à rechercher.
-     * @return Une liste d'espece correspondant au nom donné.
-     */
-    fun findByNom(nomRechercher: String): MutableList<IndividuMonstre> {
-        val result = mutableListOf<IndividuMonstre>()
+    // --- FIND BY NOM ---
+    fun findByNom(nomRechercher: String): MutableList<IndividuMonstreEntity> {
+        val result = mutableListOf<IndividuMonstreEntity>()
         val sql = "SELECT * FROM IndividuMonstre WHERE nom = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
         requetePreparer.setString(1, nomRechercher)
@@ -117,25 +66,7 @@ class IndividuMonstreDAO(val bdd: BDD) {
 
         if (resultatRequete != null) {
             while (resultatRequete.next()) {
-                val id = resultatRequete.getInt("id")
-                val nom = resultatRequete.getString("nom")
-                val idEspece = resultatRequete.getInt("fk_espece_id")
-                val idEntraineur = resultatRequete.getInt("fk_entraineur_equipe_id")
-                val niveau = resultatRequete.getInt("niveau")
-                val attaque = resultatRequete.getInt("attaque")
-                val defense = resultatRequete.getInt("defense")
-                val vitesse = resultatRequete.getInt("vitesse")
-                val attaqueSpe = resultatRequete.getInt("attaqueSpe")
-                val defenseSpe = resultatRequete.getInt("defenseSpe")
-                val pvMax = resultatRequete.getInt("pvMax")
-                val potentiel = resultatRequete.getDouble("potentiel")
-                val exp = resultatRequete.getDouble("exp")
-                val pv = resultatRequete.getInt("pv")
-
-                val espece = especeDao.findById(idEspece)!!
-                val entraineur = entraineurDao.findById(idEntraineur)!!
-                val individu = IndividuMonstre(id, nom, espece, entraineur, 0.0)
-                result.add(individu)
+                result.add(mapResultSet(resultatRequete))
             }
         }
 
@@ -143,64 +74,91 @@ class IndividuMonstreDAO(val bdd: BDD) {
         return result
     }
 
-    // --- Sauvegarder un IndividuMonstre ---
-    fun save(individu: IndividuMonstre): IndividuMonstre? {
+    // --- SAVE (INSERT / UPDATE) ---
+    fun save(individu: IndividuMonstreEntity): IndividuMonstreEntity? {
         val requetePreparer: PreparedStatement
 
         if (individu.id == 0) {
-            // Insertion
-            val sql =
-                "INSERT INTO IndividuMonstre (nom, espece, entraineur, niveau, attaque, defense, vitesse, attaqueSpe, defenseSpe, pvMax, potentiel, exp, pv) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            // INSERT
+            val sql = """
+                INSERT INTO IndividuMonstre 
+                (nom, niveau, attaque, defense, vitesse, attaqueSpe, defenseSpe, pvMax,
+                 potentiel, exp, pv, espece_id, entraineur_equipe_id, entraineur_boite_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             requetePreparer.setString(1, individu.nom)
-            requetePreparer.setInt(2, individu.espece.id)
-            requetePreparer.setInt(3, individu.entraineur!!.id)
-            requetePreparer.setInt(4, individu.niveau)
-            requetePreparer.setInt(5, individu.attaque)
-            requetePreparer.setInt(6, individu.defense)
-            requetePreparer.setInt(7, individu.vitesse)
-            requetePreparer.setInt(8, individu.attaqueSpe)
-            requetePreparer.setInt(9, individu.defenseSpe)
-            requetePreparer.setInt(10, individu.pvMax)
-            requetePreparer.setDouble(11, individu.potentiel)
-            requetePreparer.setDouble(12, individu.exp)
-            requetePreparer.setInt(13, individu.pv)
+            requetePreparer.setInt(2, individu.niveau)
+            requetePreparer.setInt(3, individu.attaque)
+            requetePreparer.setInt(4, individu.defense)
+            requetePreparer.setInt(5, individu.vitesse)
+            requetePreparer.setInt(6, individu.attaqueSpe)
+            requetePreparer.setInt(7, individu.defenseSpe)
+            requetePreparer.setInt(8, individu.pvMax)
+            requetePreparer.setDouble(9, individu.potentiel)
+            requetePreparer.setDouble(10, individu.exp)
+            requetePreparer.setInt(11, individu.pv)
+            if (individu.especeId != null) requetePreparer.setInt(12, individu.especeId!!) else requetePreparer.setNull(12, java.sql.Types.INTEGER)
+            if (individu.entraineurEquipeId != null) requetePreparer.setInt(13, individu.entraineurEquipeId!!) else requetePreparer.setNull(13, java.sql.Types.INTEGER)
+            if (individu.entraineurBoiteId != null) requetePreparer.setInt(14, individu.entraineurBoiteId!!) else requetePreparer.setNull(14, java.sql.Types.INTEGER)
+
+            val nbLigneMaj = requetePreparer.executeUpdate()
+            if (nbLigneMaj > 0) {
+                val generatedKeys = requetePreparer.generatedKeys
+                if (generatedKeys.next()) {
+                    individu.id = generatedKeys.getInt(1)
+                }
+            }
+
         } else {
-            // Mise à jour
-            val sql =
-                "UPDATE IndividuMonstre SET nom=?, espece=?, entraineur=?, niveau=?, attaque=?, defense=?, vitesse=?, attaqueSpe=?, defenseSpe=?, pvMax=?, potentiel=?, exp=?, pv=? WHERE id=?"
+            // UPDATE
+            val sql = """
+                UPDATE IndividuMonstre SET 
+                    nom=?, niveau=?, attaque=?, defense=?, vitesse=?, attaqueSpe=?, defenseSpe=?, pvMax=?,
+                    potentiel=?, exp=?, pv=?, espece_id=?, entraineur_equipe_id=?, entraineur_boite_id=?
+                WHERE id=?
+            """.trimIndent()
+
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
             requetePreparer.setString(1, individu.nom)
-            requetePreparer.setInt(2, individu.espece.id)
-            requetePreparer.setInt(3, individu.entraineur!!.id)
-            requetePreparer.setInt(4, individu.niveau)
-            requetePreparer.setInt(5, individu.attaque)
-            requetePreparer.setInt(6, individu.defense)
-            requetePreparer.setInt(7, individu.vitesse)
-            requetePreparer.setInt(8, individu.attaqueSpe)
-            requetePreparer.setInt(9, individu.defenseSpe)
-            requetePreparer.setInt(10, individu.pvMax)
-            requetePreparer.setDouble(11, individu.potentiel)
-            requetePreparer.setDouble(12, individu.exp)
-            requetePreparer.setInt(13, individu.pv)
-            requetePreparer.setInt(14, individu.id)
-        }
+            requetePreparer.setInt(2, individu.niveau)
+            requetePreparer.setInt(3, individu.attaque)
+            requetePreparer.setInt(4, individu.defense)
+            requetePreparer.setInt(5, individu.vitesse)
+            requetePreparer.setInt(6, individu.attaqueSpe)
+            requetePreparer.setInt(7, individu.defenseSpe)
+            requetePreparer.setInt(8, individu.pvMax)
+            requetePreparer.setDouble(9, individu.potentiel)
+            requetePreparer.setDouble(10, individu.exp)
+            requetePreparer.setInt(11, individu.pv)
+            if (individu.especeId != null) requetePreparer.setInt(12, individu.especeId!!) else requetePreparer.setNull(12, java.sql.Types.INTEGER)
+            if (individu.entraineurEquipeId != null) requetePreparer.setInt(13, individu.entraineurEquipeId!!) else requetePreparer.setNull(13, java.sql.Types.INTEGER)
+            if (individu.entraineurBoiteId != null) requetePreparer.setInt(14, individu.entraineurBoiteId!!) else requetePreparer.setNull(14, java.sql.Types.INTEGER)
+            requetePreparer.setInt(15, individu.id)
 
-        val nbLigneMaj = requetePreparer.executeUpdate()
-
-        if (nbLigneMaj > 0) {
-            val generatedKeys = requetePreparer.generatedKeys
-            if (generatedKeys.next()) {
-                individu.id = generatedKeys.getInt(1)
+            val nbLigneMaj = requetePreparer.executeUpdate()
+            if (nbLigneMaj == 0) {
+                requetePreparer.close()
+                return null
             }
-            requetePreparer.close()
-            return individu
         }
 
         requetePreparer.close()
-        return null
+        return individu
     }
 
+    // --- SAVE ALL ---
+    fun saveAll(individus: Collection<IndividuMonstreEntity>): MutableList<IndividuMonstreEntity> {
+        val result = mutableListOf<IndividuMonstreEntity>()
+        for (i in individus) {
+            val sauvegarde = save(i)
+            if (sauvegarde != null) result.add(sauvegarde)
+        }
+        return result
+    }
+
+    // --- DELETE BY ID ---
     fun deleteById(id: Int): Boolean {
         val sql = "DELETE FROM IndividuMonstre WHERE id = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
@@ -211,17 +169,29 @@ class IndividuMonstreDAO(val bdd: BDD) {
             requetePreparer.close()
             nbLigneMaj > 0
         } catch (erreur: SQLException) {
-            println("Erreur lors de la suppression de l'individu : ${erreur.message}")
+            println("Erreur lors de la suppression de l’individu : ${erreur.message}")
             false
         }
     }
 
-    fun saveAll(individus: Collection<IndividuMonstre>): MutableList<IndividuMonstre> {
-        val result = mutableListOf<IndividuMonstre>()
-        for (e in individus) {
-            val sauvegarde = save(e)  // Ici il voit bien save() car au même niveau
-            if (sauvegarde != null) result.add(sauvegarde)
-        }
-        return result
+    // --- UTILITAIRE : map ResultSet vers Objet ---
+    private fun mapResultSet(rs: java.sql.ResultSet): IndividuMonstreEntity {
+        return IndividuMonstreEntity(
+            id = rs.getInt("id"),
+            nom = rs.getString("nom"),
+            niveau = rs.getInt("niveau"),
+            attaque = rs.getInt("attaque"),
+            defense = rs.getInt("defense"),
+            vitesse = rs.getInt("vitesse"),
+            attaqueSpe = rs.getInt("attaqueSpe"),
+            defenseSpe = rs.getInt("defenseSpe"),
+            pvMax = rs.getInt("pvMax"),
+            potentiel = rs.getDouble("potentiel"),
+            exp = rs.getDouble("exp"),
+            pv = rs.getInt("pv"),
+            especeId = rs.getObject("espece_id")?.let { rs.getInt("espece_id") },
+            entraineurEquipeId = rs.getObject("entraineur_equipe_id")?.let { rs.getInt("entraineur_equipe_id") },
+            entraineurBoiteId = rs.getObject("entraineur_boite_id")?.let { rs.getInt("entraineur_boite_id") }
+        )
     }
 }

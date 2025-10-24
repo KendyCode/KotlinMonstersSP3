@@ -1,5 +1,6 @@
 import DAO.EntraineurDAO
 import DAO.EspeceMonstreDAO
+import DAO.IndividuMonstreDAO
 import item.Badge
 import item.MonsterKube
 import monde.Zone
@@ -8,20 +9,19 @@ import monstre.EspeceMonstre
 import monstre.IndividuMonstre
 import jeu.Partie
 import jdbc.BDD
+import monstre.IndividuMonstreEntity
 
 //La connexion a la BDD
 val db = BDD()
 //Les DAO
 val entraineurDAO= EntraineurDAO(db)
 val especeMonstreDAO = EspeceMonstreDAO(db) // 👈 ajout du DAO pour les espèces
+val individuMonstreDAO = IndividuMonstreDAO(db)
 
 // --- Listes depuis la BDD ---
 val listeEntraineur = entraineurDAO.findAll()
 val listeEspeces = especeMonstreDAO.findAll() // 👈 ta nouvelle variable
-
-
-
-
+val listeIndividus = individuMonstreDAO.findAll()
 
 
 var joueur = Entraineur(1, "Sacha", 100)
@@ -50,6 +50,7 @@ fun main() {
         println("Bienvenue dans le monde magique des Pokémon!")
         println("Rentrez votre nom : ")
         val nomJoueur = readln()
+        joueur.nom = nomJoueur
         val PartieJoueur = Partie(1,joueur,route1)
         joueur.id=0
         entraineurDAO.save(joueur)
@@ -61,18 +62,243 @@ fun main() {
     joueur.sacAItems.add(objet1)
 
     val partie = nouvellePartie()
-
-
-
-
     partie.choixStarter()
     db.close()
-
     partie.jouer()
 
 
 
 }
+
+
+
+// Test DAO Entraineur
+
+//    // ✅ TEST DU DAO AVANT DE LANCER LE JEU
+//    println("=== Test DAO Entraineur ===")
+//    // 2️⃣ Lecture initiale
+//    println("\n📋 Liste initiale des entraîneurs :")
+//    val listeInitiale = entraineurDAO.findAll()
+//    listeInitiale.forEach { println(it) }
+//
+//    // 3️⃣ Insertion simple avec save()
+//    println("\n💾 Test save() : ajout de 'Pierre'")
+//    val pierre = Entraineur(0, "Pierre", 300)
+//    val pierreSauvegarde = entraineurDAO.save(pierre)
+//    println("Résultat de save() : $pierreSauvegarde")
+//
+//    // 4️⃣ Lecture par ID
+//    if (pierreSauvegarde != null) {
+//        println("\n🔍 Test findById(${pierreSauvegarde.id}) :")
+//        val trouveParId = entraineurDAO.findById(pierreSauvegarde.id)
+//        println("Trouvé : $trouveParId")
+//    }
+//
+//    // 5️⃣ Mise à jour
+//    if (pierreSauvegarde != null) {
+//        println("\n✏️ Test update (save sur objet existant) :")
+//        pierreSauvegarde.argents = 999
+//        val maj = entraineurDAO.save(pierreSauvegarde)
+//        println("Après mise à jour : $maj")
+//    }
+//
+//    // 6️⃣ Recherche par nom
+//    println("\n🔎 Test findByNom('Pierre') :")
+//    val listePierre = entraineurDAO.findByNom("Pierre")
+//    listePierre.forEach { println(it) }
+//
+//    // 7️⃣ Insertion multiple avec saveAll()
+//    println("\n💾 Test saveAll() : insertion multiple")
+//    val nouveauxEntraineurs = listOf(
+//        Entraineur(0, "Ondine", 400),
+//        Entraineur(0, "Major Bob", 500),
+//        Entraineur(0, "Giovanni", 1000)
+//    )
+//    val sauvegardes = entraineurDAO.saveAll(nouveauxEntraineurs)
+//    sauvegardes.forEach { println("Ajouté : $it") }
+//
+//    // 8️⃣ Vérification globale
+//    println("\n📋 Liste après toutes les insertions :")
+//    val listeApresInsert = entraineurDAO.findAll()
+//    listeApresInsert.forEach { println(it) }
+//
+//    // 9️⃣ Suppression des ajouts pour nettoyage
+//    println("\n🧹 Test deleteById() : suppression des entraîneurs ajoutés")
+//    val aSupprimer = mutableListOf<Entraineur>()
+//    pierreSauvegarde?.let { aSupprimer.add(it) }
+//    aSupprimer.addAll(sauvegardes)
+//
+//    for (e in aSupprimer) {
+//        if (entraineurDAO.deleteById(e.id)) {
+//            println("Supprimé : ${e.nom} (id=${e.id})")
+//        } else {
+//            println("Échec suppression : ${e.nom} (id=${e.id})")
+//        }
+//    }
+//
+//    // 🔟 Liste finale
+//    println("\n📋 Liste finale après nettoyage :")
+//    entraineurDAO.findAll().forEach { println(it) }
+
+
+
+// TEST DU DAO EspeceMonstre
+
+//    println("=== 🧪 TEST DU DAO EspeceMonstre ===")
+//    val especeDAO = EspeceMonstreDAO(db)
+//    // 1️⃣ - Test findAll (lecture)
+//    println("\n📘 Toutes les espèces existantes :")
+//    val allEspeces = especeDAO.findAll()
+//    allEspeces.forEach { println(it) }
+
+//    // 2️⃣ - Test save (insertion)
+//    println("\n💾 Insertion d'une nouvelle espèce :")
+//    val especeTest = EspeceMonstre(
+//        id = 0,
+//        nom = "Testomon",
+//        type = "Fantôme",
+//        baseAttaque = 12,
+//        baseDefense = 9,
+//        baseVitesse = 15,
+//        baseAttaqueSpe = 17,
+//        baseDefenseSpe = 8,
+//        basePv = 55,
+//        modAttaque = 9.0,
+//        modDefense = 8.5,
+//        modVitesse = 10.0,
+//        modAttaqueSpe = 11.5,
+//        modDefenseSpe = 7.0,
+//        modPv = 24.0,
+//        description = "Un monstre de test qui hante la base de données.",
+//        particularites = "Sert uniquement pour les tests.",
+//        caracteres = "Calme, loyal, invisible"
+//    )
+//    val savedEspece = especeDAO.save(especeTest)
+//    println("✅ Espèce insérée : $savedEspece")
+
+//    // 3️⃣ - Test findById
+//    println("\n🔍 Recherche par ID 8 ")
+//    val foundById = especeDAO.findById(8)
+//    println(foundById)
+//
+//    // 4️⃣ Recherche par nom
+//    println("\n🔎 Test findByNom('galum') :")
+//    val espTestomon = especeDAO.findByNom("Testomon")
+//    espTestomon.forEach { println(it) }
+
+//    // 5️⃣   Test update (modification)
+//    val savedEspece = especeMonstreDAO.findById(14) // par exemple id = 3
+//    if (savedEspece != null) {
+//        println("\n✏️ Mise à jour de l'espèce (${savedEspece.nom}) :")
+//        savedEspece.nom = "Testomon Évolué"
+//        especeDAO.save(savedEspece)
+//        val updated = especeDAO.findById(savedEspece.id)
+//        println("✅ Espèce mise à jour : $updated")
+//    }
+
+//    // 5️⃣ - Test saveAll (insertion multiple)
+//    println("\n📦 Insertion multiple (saveAll) :")
+//    val espece1 = EspeceMonstre(0, "MultiA", "Feu", 10, 9, 11, 12, 8, 50, 8.0, 9.0, 8.5, 10.0, 9.0, 23.0, "Premier test multiple", "Brille au soleil", "Joyeux")
+//    val espece2 = EspeceMonstre(0, "MultiB", "Eau", 11, 10, 10, 13, 9, 53, 9.5, 8.0, 8.0, 11.0, 8.5, 25.0, "Deuxième test multiple", "Aime la pluie", "Calme")
+//    val savedList = especeDAO.saveAll(listOf(espece1, espece2))
+//    println("✅ Espèces insérées :")
+//    savedList.forEach { println(it) }
+
+//    // 6️⃣ - Test deleteById
+//    val savedEspece = especeMonstreDAO.findById(15) // par exemple id = 3
+//    if (savedEspece != null) {
+//        println("\n🗑️ Suppression de l'espèce ${savedEspece.nom} (id=${savedEspece.id})")
+//        val deleted = especeDAO.deleteById(savedEspece.id)
+//        println("✅ Suppression réussie : $deleted")
+//    }
+//
+//    println("\n=== ✅ FIN DES TESTS EspeceMonstreDAO ===")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TEST DU DAO IndividuMonstreDAO
+
+//println("=== 🧪 TEST DU DAO IndividuMonstreDAO ===")
+//val individuMonstreDAO = IndividuMonstreDAO(db)
+//val especeDAO = EspeceMonstreDAO(db)
+// --- Récupérer une espèce pour la FK ---
+//val listeEspeces = especeDAO.findAll()
+//if (listeEspeces.isEmpty()) {
+//    println("Pas d'espèces en base. Ajoutez-en avant de tester.")
+//    db.close()
+//    return
+//}
+//val espece = listeEspeces.first()
+//
+//    // --- CREATE / INSERT ---
+//    val nouvelIndividu = IndividuMonstreEntity(
+//        id = 0,
+//        nom = "Testomon",
+//        niveau = 1,
+//        attaque = 10,
+//        defense = 8,
+//        vitesse = 12,
+//        attaqueSpe = 9,
+//        defenseSpe = 7,
+//        pvMax = 50,
+//        potentiel = 1.2,
+//        exp = 0.0,
+//        pv = 50,
+//        especeId = espece.id,
+//        entraineurEquipeId = null,
+//        entraineurBoiteId = null
+//    )
+//
+//    val insere = dao.save(nouvelIndividu)
+//    println("Inséré : $insere")
+//
+// --- READ ALL ---
+//val all = individuMonstreDAO.findAll()
+//println("Tous les individus : $all")
+//
+// --- READ BY ID ---
+//val byId = individuMonstreDAO.findById(6)
+//println("Recherche par ID : $byId")
+//
+// --- READ BY NOM ---
+//val byNom = individuMonstreDAO.findByNom("Aquamy_Bob")
+//println("Recherche par nom : $byNom")
+//
+//    // --- UPDATE ---
+//    val savedEspece = individuMonstreDAO.findById(6)
+//    if (savedEspece != null){
+//        savedEspece.nom = "TestomonUpdated"
+//        val updated = individuMonstreDAO.save(savedEspece)
+//        println("Mise à jour : $updated")
+//    }
+//
+//    // --- SAVE ALL ---
+//    val listeIndividus = listOf(
+//        IndividuMonstreEntity(0, "MonoRock1", 1, 10, 10, 10, 10, 10, 50, 1.0, 0.0, 50, espece.id, null, null),
+//        IndividuMonstreEntity(0, "MonoRock2", 1, 11, 11, 11, 11, 11, 55, 1.1, 0.0, 55, espece.id, null, null)
+//    )
+//    val sauvegardeMultiple = individuMonstreDAO.saveAll(listeIndividus)
+//    println("SaveAll : $sauvegardeMultiple")
+//
+// --- DELETE ---
+//val supprime = individuMonstreDAO.deleteById(8)
+//println("Suppression réussie ? $supprime")
+
 
 
 

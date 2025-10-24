@@ -62,5 +62,9 @@ class EspeceMonstre(
         val safeArt = art.replace("/", "∕")
         return safeArt.replace("\\u001B", "\u001B")
     }
+
+    override fun toString(): String {
+        return "EspeceMonstre(id=$id, nom=$nom, type=$type, basePv=$basePv)"
+    }
 }
 

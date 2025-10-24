@@ -21,7 +21,10 @@ class Entraineur(
     var argents:Int,
     var equipeMonstre: MutableList<IndividuMonstre> = mutableListOf(),
     var boiteMonstre: MutableList<IndividuMonstre> = mutableListOf(),
-    var sacAItems: MutableList<Item> = mutableListOf()
+    var sacAItems: MutableList<Item> = mutableListOf(),
+
+
+
 
     //TODO sacAKube
 ) {
@@ -32,6 +35,9 @@ class Entraineur(
      * 1. Le nom de l'entraîneur.
      * 2. La somme d'argent qu'il possède.
      */
+    override fun toString(): String {
+        return "Entraineur(id=$id, nom=$nom, argent=$argents)"
+    }
     fun afficheDetail(){
         println("Dresseur : ${this.nom}")
         println("Argents: ${this.argents} ")
