@@ -255,4 +255,35 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
         }
         return result
     }
+
+    /**
+     * Utilitaire : transforme une ligne SQL en objet EspeceMonstre.
+     * Sert notamment à ZoneDAO pour recréer les espèces liées à une zone.
+     */
+    fun mapResultSetToEspece(rs: java.sql.ResultSet): EspeceMonstre {
+        return EspeceMonstre(
+            id = rs.getInt("id"),
+            nom = rs.getString("nom"),
+            type = rs.getString("type"),
+            baseAttaque = rs.getInt("baseAttaque"),
+            baseDefense = rs.getInt("baseDefense"),
+            baseVitesse = rs.getInt("baseVitesse"),
+            baseAttaqueSpe = rs.getInt("baseAttaqueSpe"),
+            baseDefenseSpe = rs.getInt("baseDefenseSpe"),
+            basePv = rs.getInt("basePv"),
+            modAttaque = rs.getDouble("modAttaque"),
+            modDefense = rs.getDouble("modDefense"),
+            modVitesse = rs.getDouble("modVitesse"),
+            modAttaqueSpe = rs.getDouble("modAttaqueSpe"),
+            modDefenseSpe = rs.getDouble("modDefenseSpe"),
+            modPv = rs.getDouble("modPv"),
+            description = rs.getString("description"),
+            particularites = rs.getString("particularites"),
+            caracteres = rs.getString("caracteres")
+        )
+    }
 }
+
+
+
+

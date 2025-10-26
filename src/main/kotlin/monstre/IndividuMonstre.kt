@@ -120,28 +120,29 @@ class IndividuMonstre(
      *
      * La méthode préserve les PV relatifs en ajustant [pv] selon la variation de [pvMax].
      */
-    fun levelUp(): Unit{
+    fun levelUp() {
         niveau += 1
 
-        // sauvegarde des anciens PV max pour calcul du gain
         val ancienPvMax = pvMax
 
-        // maj pv max avec formule donnée
-        pvMax = round(espece.modPv * potentiel).toInt() + Random.nextInt(-5, 6)
-
-        // Mise à jour des autres statistiques (variation ±2 à ±3)
+        // Croissance progressive basée sur les modificateurs
         attaque += round(espece.modAttaque * potentiel).toInt() + Random.nextInt(-2, 3)
         defense += round(espece.modDefense * potentiel).toInt() + Random.nextInt(-2, 3)
         vitesse += round(espece.modVitesse * potentiel).toInt() + Random.nextInt(-2, 3)
         attaqueSpe += round(espece.modAttaqueSpe * potentiel).toInt() + Random.nextInt(-2, 3)
         defenseSpe += round(espece.modDefenseSpe * potentiel).toInt() + Random.nextInt(-2, 3)
 
-        // gain de PV = différence entre nouveaux et anciens PV max
-        val gainPv = pvMax - ancienPvMax
+        // 🩸 Amélioration : les PV croissent proportionnellement au potentiel
+        val gainPv = round(espece.modPv * potentiel / 5).toInt() + Random.nextInt(-2, 3)
+        pvMax += gainPv
+
+        // Le monstre récupère les PV gagnés
         pv += gainPv
 
-
+        // On s'assure que les PV ne dépassent pas le max
+        if (pv > pvMax) pv = pvMax
     }
+
 
     // --- POINTS DE VIE ---
 
@@ -205,6 +206,8 @@ class IndividuMonstre(
      * incluant ses statistiques actuelles et son art ASCII.
      */
     fun afficheDetail():Unit{
+
+
         var nomDetail = this.nom
         var niveauDetail = this.niveau
         var expDetail = this.exp
@@ -219,18 +222,20 @@ class IndividuMonstre(
 
         println(espece.afficheArt())
         println("""
-    Nom : $nomDetail
-    Niveau : $niveauDetail
-    Exp : $expDetail
-    PV : $pvDetail / $pvMaxDetail
-    Attaque : $attaqueDetail
-    Défense : $defDetail
-    Vitesse : $vitesseDetail
-    Attaque Spéciale : $attaqueSpeDetail
-    Défense Spéciale : $defSpeDetail
-""".trimIndent())
+        
+        Nom : $nomDetail
+        Niveau : $niveauDetail
+        Exp : $expDetail
+        PV : $pvDetail / $pvMaxDetail
+        Attaque : $attaqueDetail
+        Défense : $defDetail
+        Vitesse : $vitesseDetail
+        Attaque Spéciale : $attaqueSpeDetail
+        Défense Spéciale : $defSpeDetail
+    """.trimIndent())
 
     }
+
 
 
 

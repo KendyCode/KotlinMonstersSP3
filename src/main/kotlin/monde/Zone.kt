@@ -85,6 +85,4 @@ class Zone(
         combat.lanceCombat()
     }
 
-
-
 }

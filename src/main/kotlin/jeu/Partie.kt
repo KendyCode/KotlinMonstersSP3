@@ -1,12 +1,12 @@
 package jeu
 
-import especeAquamy
-import especeFlamkip
-import especeSpringleaf
+
+import especeMonstreDAO
 import monde.Zone
 import monstre.EspeceMonstre
 import monstre.IndividuMonstre
 import org.example.dresseur.Entraineur
+
 
 
 /**
@@ -41,10 +41,24 @@ class Partie(
      * 4. Ajout du monstre dans l’équipe du joueur.
      */
     fun choixStarter(){
+
         // Création des trois starters prédéfinis avec une expérience initiale fixe
-        val monstre1 = IndividuMonstre(1, "springleaf", especeSpringleaf, null,1500.0)
-        val monstre2 = IndividuMonstre(2, "flamkip",especeFlamkip,null,1500.0)
-        val monstre3 = IndividuMonstre(3, "aquamy",especeAquamy,null,1500.0)
+        val especeSpringleaf = especeMonstreDAO.findByNom("Springleaf").firstOrNull()
+        println(especeSpringleaf?.baseDefense)
+        val especeFlamkip = especeMonstreDAO.findByNom("Flamkip").firstOrNull()
+        val especeAquamy = especeMonstreDAO.findByNom("Aquamy").firstOrNull()
+
+        if (especeSpringleaf == null || especeFlamkip == null || especeAquamy == null) {
+            println("Erreur: Impossible de charger les starters depuis la base de données")
+            return
+        }
+
+        // Création des trois starters avec une expérience initiale fixe
+        val monstre1 = IndividuMonstre(1, "Springleaf", especeSpringleaf, joueur, 1500.0)
+        println(monstre1.entraineur)
+        val monstre2 = IndividuMonstre(2, "Flamkip", especeFlamkip, joueur, 1500.0)
+        val monstre3 = IndividuMonstre(3, "Aquamy", especeAquamy, joueur, 1500.0)
+
 
         /**
          * Fonction récursive interne pour gérer le processus de sélection.
@@ -152,6 +166,11 @@ class Partie(
      */
     fun jouer(){
         println("Vous êtes dans ${zone.nom}")
+        zone.especesMonstres.forEach { espece ->
+            println(" - ${espece.nom} [Type: ${espece.type}]")
+        }
+        println()
+
         println("1 => Rencontrer un monstre sauvage")
         println("2 => Examiner l’équipe de monstres ")
         println("3 => Aller à la zone suivante ")

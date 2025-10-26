@@ -49,6 +49,33 @@ CREATE TABLE IndividuMonstre (
      entraineur_boite_id INT DEFAULT NULL REFERENCES Entraineurs(id)
 );
 
+CREATE TABLE Zones (
+                      id INT PRIMARY KEY AUTO_INCREMENT,
+                      nom VARCHAR(255) NOT NULL,
+                      expZone INT NOT NULL);
+
+CREATE TABLE Zones_EspecesMonstre (
+                                    zone_id INT NOT NULL,
+                                    espece_id INT NOT NULL,
+                                    PRIMARY KEY (zone_id, espece_id),
+                                    FOREIGN KEY (zone_id) REFERENCES Zones(id),
+                                    FOREIGN KEY (espece_id) REFERENCES EspecesMonstre(id)
+);
+
+-- Foret Sombre contient Springleaf et Flamkip et pyrokip
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (1, 1);
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (1, 4);
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (1, 5);
+
+-- Caverne Obscure contient Aquamy
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (2, 7);
+
+-- Montagne Ardente contient Laoumi et Bugsyface
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (3, 8);
+INSERT INTO Zone_Espece (zone_id, espece_id) VALUES (3, 10);
+
+
+
 
 INSERT INTO EspecesMonstre
 (id, nom, type, baseAttaque, baseDefense, baseVitesse, baseAttaqueSpe, baseDefenseSpe, basePv,

@@ -1,4 +1,0 @@
-package monstre
-
-class PalierEvolutiion {
-}
