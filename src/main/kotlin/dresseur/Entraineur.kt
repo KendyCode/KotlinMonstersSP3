@@ -18,28 +18,27 @@ import item.Item
 class Entraineur(
     var id: Int,
     var nom: String,
-    var argents:Int,
+    var argents: Int,
+    var isNpc: Boolean = true,                // TRUE = NPC, FALSE = vrai joueur
+    var zoneActuelle: Int? = null,           // zone actuelle pour les vrais joueurs, null pour NPC
     var equipeMonstre: MutableList<IndividuMonstre> = mutableListOf(),
     var boiteMonstre: MutableList<IndividuMonstre> = mutableListOf(),
-    var sacAItems: MutableList<Item> = mutableListOf(),
-
-
-
-
-    //TODO sacAKube
+    var sacAItems: MutableList<Item> = mutableListOf()
+    // TODO sacAKube
 ) {
     /**
      * Affiche les détails de l'entraîneur, y compris son nom et la quantité d'argent en sa possession.
-     *
-     * Cette méthode affiche les informations de l'entraîneur sous la forme de deux lignes :
-     * 1. Le nom de l'entraîneur.
-     * 2. La somme d'argent qu'il possède.
      */
     override fun toString(): String {
-        return "Entraineur(id=$id, nom=$nom, argent=$argents)"
+        return "Entraineur(id=$id, nom=$nom, argent=$argents, isNpc=$isNpc, zoneActuelle=$zoneActuelle)"
     }
-    fun afficheDetail(){
-        println("Dresseur : ${this.nom}")
-        println("Argents: ${this.argents} ")
+
+    fun afficheDetail() {
+        println("Dresseur : $nom")
+        println("Argents : $argents")
+        println("NPC : $isNpc")
+        if (!isNpc) {
+            println("Zone actuelle : ${zoneActuelle ?: "Non définie"}")
+        }
     }
 }

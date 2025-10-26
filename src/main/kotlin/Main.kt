@@ -25,7 +25,7 @@ val listeEspeces = especeMonstreDAO.findAll() // 👈 ta nouvelle variable
 val listeIndividus = individuMonstreDAO.findAll()
 val listeZones = zoneDAO.findAll()
 
-var joueur = Entraineur(1, "Sacha", 100)
+var joueur = Entraineur(1, "Sacha", 100,)
 var rival = Entraineur(2,"Regis",200)
 
 
@@ -44,6 +44,8 @@ var route1 = zoneDAO.findById(1)!!
 var route2 = zoneDAO.findById(2)!!
 var route3 = zoneDAO.findById(3)!!
 
+
+
 var objet1 = MonsterKube(1,"cube", "description",11.0)
 
 fun main() {
@@ -60,15 +62,16 @@ fun main() {
 //        }
 //        println()
 //    }
-
-
-
-
     fun nouvellePartie():Partie{
         println("Bienvenue dans le monde magique des Pokémon!")
         println("Rentrez votre nom : ")
         val nomJoueur = readln()
         joueur.nom = nomJoueur
+
+        // Définir la zone actuelle du joueur (par exemple zone 1 au début)
+        joueur.zoneActuelle = route1.id
+        joueur.isNpc = false  // c'est un vrai joueur
+
         val PartieJoueur = Partie(1,joueur,route1)
         joueur.id=0
         entraineurDAO.save(joueur)
@@ -84,12 +87,15 @@ fun main() {
 
     val partie = nouvellePartie()
     partie.choixStarter()
-    db.close()
+
     partie.jouer()
+
+    db.close()
 
 
 
 }
+
 
 
 

@@ -4,10 +4,18 @@ CREATE TABLE Entraineurs(
     nom VARCHAR(255),
     argents INTEGER);
 
+ALTER TABLE Entraineurs
+    ADD COLUMN is_npc BOOLEAN DEFAULT TRUE,       -- TRUE = NPC, FALSE = vrai joueur
+ADD COLUMN zone_actuelle INTEGER DEFAULT NULL; -- zone actuelle pour les vrais joueurs
+
 INSERT INTO Entraineurs (nom, argents) VALUES
                                           ('Alice', 1000),
                                           ('Bob', 1200),
                                           ('Clara', 900);
+UPDATE Entraineurs
+SET is_npc = TRUE,
+    zone_actuelle = NULL
+WHERE nom IN ('Alice', 'Bob', 'Clara');
 
 
 CREATE TABLE EspecesMonstre (
