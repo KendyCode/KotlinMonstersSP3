@@ -194,4 +194,36 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
             entraineurBoiteId = rs.getObject("entraineur_boite_id")?.let { rs.getInt("entraineur_boite_id") }
         )
     }
+
+    fun toModel(entity: IndividuMonstreEntity): IndividuMonstre? {
+        // Récupère l'espèce correspondante
+        val espece = entity.especeId?.let { especeMonstreDAO.findById(it) } ?: return null
+
+        // Récupère l'entraîneur (équipe ou boîte)
+        val entraineur = entity.entraineurEquipeId?.let { entraineurDAO.findById(it) }
+            ?: entity.entraineurBoiteId?.let { entraineurDAO.findById(it) }
+
+        // Crée l’objet de jeu
+        val monstre = IndividuMonstre(
+            id = entity.id,
+            nom = entity.nom,
+            espece = espece,
+            entraineur = entraineur,
+            expInit = entity.exp
+        )
+
+        // Réinjecte les valeurs exactes de la base (pour éviter la randomisation du constructeur)
+        monstre.niveau = entity.niveau
+        monstre.attaque = entity.attaque
+        monstre.defense = entity.defense
+        monstre.vitesse = entity.vitesse
+        monstre.attaqueSpe = entity.attaqueSpe
+        monstre.defenseSpe = entity.defenseSpe
+        monstre.pvMax = entity.pvMax
+        monstre.potentiel = entity.potentiel
+        monstre.exp = entity.exp
+        monstre.pv = entity.pv
+
+        return monstre
+    }
 }

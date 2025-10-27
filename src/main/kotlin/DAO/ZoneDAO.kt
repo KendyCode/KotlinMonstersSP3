@@ -7,18 +7,7 @@ import monde.Zone
 import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Statement
-import DAO.EspeceMonstreDAO
 
-/**
- * DAO (Data Access Object) pour la table `zones`.
- *
- * Gère :
- * - 🔍 Lecture (findAll, findById)
- * - 💾 Sauvegarde (save, saveAll)
- * - ❌ Suppression (deleteById)
- *
- * Utilise EspeceMonstreDAO pour reconstruire les espèces de chaque zone.
- */
 class ZoneDAO(
     val bdd: BDD = db,
     private val especeMonstreDAO: EspeceMonstreDAO = EspeceMonstreDAO(bdd)
@@ -27,6 +16,9 @@ class ZoneDAO(
     // --- FIND ALL ---
     fun findAll(): MutableList<Zone> {
         val zones = mutableListOf<Zone>()
+        val zoneMap = mutableMapOf<Int, Zone>()
+
+        // 1️⃣ Charger toutes les zones sans relations
         val sql = "SELECT * FROM zones"
         val requete = bdd.connectionBDD!!.prepareStatement(sql)
         val result = bdd.executePreparedStatement(requete)
@@ -40,32 +32,32 @@ class ZoneDAO(
                     especesMonstres = findEspecesByZoneId(result.getInt("id"))
                 )
                 zones.add(zone)
+                zoneMap[zone.id] = zone
             }
         }
-
         requete.close()
+
+        // 2️⃣ Relier zoneSuivante et zonePrecedente
+        for (zone in zones) {
+            val sqlLink = "SELECT fk_zoneSuivante_id, fk_zonePrecedente_id FROM zones WHERE id = ?"
+            val reqLink = bdd.connectionBDD!!.prepareStatement(sqlLink)
+            reqLink.setInt(1, zone.id)
+            val rsLink = bdd.executePreparedStatement(reqLink)
+            if (rsLink != null && rsLink.next()) {
+                val idSuivante = rsLink.getObject("fk_zoneSuivante_id")?.let { rsLink.getInt("fk_zoneSuivante_id") }
+                val idPrecedente = rsLink.getObject("fk_zonePrecedente_id")?.let { rsLink.getInt("fk_zonePrecedente_id") }
+                zone.zoneSuivante = idSuivante?.let { zoneMap[it] }
+                zone.zonePrecedente = idPrecedente?.let { zoneMap[it] }
+            }
+            reqLink.close()
+        }
+
         return zones
     }
 
     // --- FIND BY ID ---
     fun findById(id: Int): Zone? {
-        val sql = "SELECT * FROM zones WHERE id = ?"
-        val requete = bdd.connectionBDD!!.prepareStatement(sql)
-        requete.setInt(1, id)
-        val result = bdd.executePreparedStatement(requete)
-
-        var zone: Zone? = null
-        if (result != null && result.next()) {
-            zone = Zone(
-                id = result.getInt("id"),
-                nom = result.getString("nom"),
-                expZone = result.getInt("expZone"),
-                especesMonstres = findEspecesByZoneId(id)
-            )
-        }
-
-        requete.close()
-        return zone
+        return findAll().firstOrNull { it.id == id }
     }
 
     // --- TROUVER LES ESPÈCES LIÉES À UNE ZONE ---
@@ -96,16 +88,26 @@ class ZoneDAO(
         val isInsert = zone.id == 0
 
         if (isInsert) {
-            val sql = "INSERT INTO zones (nom, expZone) VALUES (?, ?)"
+            val sql = """
+                INSERT INTO zones (nom, expZone, fk_zoneSuivante_id, fk_zonePrecedente_id) 
+                VALUES (?, ?, ?, ?)
+            """.trimIndent()
             requete = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             requete.setString(1, zone.nom)
             requete.setInt(2, zone.expZone)
+            requete.setObject(3, zone.zoneSuivante?.id)
+            requete.setObject(4, zone.zonePrecedente?.id)
         } else {
-            val sql = "UPDATE zones SET nom = ?, expZone = ? WHERE id = ?"
+            val sql = """
+                UPDATE zones SET nom = ?, expZone = ?, fk_zoneSuivante_id = ?, fk_zonePrecedente_id = ? 
+                WHERE id = ?
+            """.trimIndent()
             requete = bdd.connectionBDD!!.prepareStatement(sql)
             requete.setString(1, zone.nom)
             requete.setInt(2, zone.expZone)
-            requete.setInt(3, zone.id)
+            requete.setObject(3, zone.zoneSuivante?.id)
+            requete.setObject(4, zone.zonePrecedente?.id)
+            requete.setInt(5, zone.id)
         }
 
         val nbLigneMaj = requete.executeUpdate()

@@ -4,18 +4,13 @@ CREATE TABLE Entraineurs(
     nom VARCHAR(255),
     argents INTEGER);
 
-ALTER TABLE Entraineurs
-    ADD COLUMN is_npc BOOLEAN DEFAULT TRUE,       -- TRUE = NPC, FALSE = vrai joueur
-ADD COLUMN zone_actuelle INTEGER DEFAULT NULL; -- zone actuelle pour les vrais joueurs
+
 
 INSERT INTO Entraineurs (nom, argents) VALUES
                                           ('Alice', 1000),
                                           ('Bob', 1200),
                                           ('Clara', 900);
-UPDATE Entraineurs
-SET is_npc = TRUE,
-    zone_actuelle = NULL
-WHERE nom IN ('Alice', 'Bob', 'Clara');
+
 
 
 CREATE TABLE EspecesMonstre (
@@ -61,6 +56,30 @@ CREATE TABLE Zones (
                       id INT PRIMARY KEY AUTO_INCREMENT,
                       nom VARCHAR(255) NOT NULL,
                       expZone INT NOT NULL);
+
+-- 1️⃣ Ajouter les colonnes fk_zoneSuivante_id et fk_zonePrecedente_id
+ALTER TABLE Zones
+    ADD COLUMN fk_zoneSuivante_id INT NULL,
+ADD COLUMN fk_zonePrecedente_id INT NULL;
+
+-- 2️⃣ Ajouter les contraintes de clé étrangère auto-référencée
+ALTER TABLE Zones
+    ADD CONSTRAINT fk_zone_suivante
+        FOREIGN KEY (fk_zoneSuivante_id) REFERENCES Zones(id)
+            ON DELETE SET NULL
+            ON UPDATE CASCADE;
+
+ALTER TABLE Zones
+    ADD CONSTRAINT fk_zone_precedente
+        FOREIGN KEY (fk_zonePrecedente_id) REFERENCES Zones(id)
+            ON DELETE SET NULL
+            ON UPDATE CASCADE;
+
+-- Insertion des zones avec fk_zoneSuivante_id et fk_zonePrecedente_id
+INSERT INTO Zones (id, nom, expZone, fk_zoneSuivante_id, fk_zonePrecedente_id) VALUES
+                                                                                   (1, 'Foret Sombre', 10, 2, NULL),
+                                                                                   (2, 'Caverne Obscure', 20, 3, 1),
+                                                                                   (3, 'Montagne Ardente', 40, NULL, 2);
 
 CREATE TABLE Zones_EspecesMonstre (
                                     zone_id INT NOT NULL,

@@ -85,4 +85,11 @@ class Zone(
         combat.lanceCombat()
     }
 
+    override fun toString(): String {
+        return "Zone(id=$id, nom=$nom, expZone=$expZone, " +
+                "zoneSuivante=${zoneSuivante?.id}, zonePrecedente=${zonePrecedente?.id}, " +
+                "especes=${especesMonstres.map { it.nom }})"
+    }
+
+
 }

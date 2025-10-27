@@ -9,7 +9,7 @@ import monstre.EspeceMonstre
 import monstre.IndividuMonstre
 import monstre.IndividuMonstreEntity
 import org.example.dresseur.Entraineur
-import route1
+
 
 
 /**
@@ -178,7 +178,7 @@ class Partie(
         println("2 => Examiner l’équipe de monstres ")
         println("3 => Aller à la zone suivante ")
         println("4 => Aller à la zone précédente  ")
-        println("5 => Sauvegarder la partie  ")
+
 
         var choix = readln().toInt()
         when(choix){
@@ -204,36 +204,6 @@ class Partie(
                 println("Pas de zone précédente")
                 jouer()
             }
-            5 -> {
-                // Sauvegarde Zone
-                joueur.zoneActuelle = zone.id
-                entraineurDAO.save(joueur)
-
-                // Sauvegarde Monstre
-                var listeIndividusSave = mutableListOf<IndividuMonstreEntity>()
-                for (monstreEntity in joueur.equipeMonstre){
-                    listeIndividusSave.add(IndividuMonstreEntity(0,monstreEntity.nom,monstreEntity.niveau,
-                        monstreEntity.attaque,monstreEntity.defense,monstreEntity.vitesse,
-                        monstreEntity.attaqueSpe,monstreEntity.defenseSpe,monstreEntity.pvMax,
-                        monstreEntity.potentiel,monstreEntity.exp,monstreEntity.pv,monstreEntity.espece.id,
-                        monstreEntity.entraineur?.id,null))
-                }
-                for (monstreEntity in joueur.boiteMonstre){
-                    listeIndividusSave.add(IndividuMonstreEntity(0,monstreEntity.nom,monstreEntity.niveau,
-                        monstreEntity.attaque,monstreEntity.defense,monstreEntity.vitesse,
-                        monstreEntity.attaqueSpe,monstreEntity.defenseSpe,monstreEntity.pvMax,
-                        monstreEntity.potentiel,monstreEntity.exp,monstreEntity.pv,monstreEntity.espece.id,
-                        monstreEntity.entraineur?.id,monstreEntity.entraineur?.id))
-                }
-                individuMonstreDAO.saveAll(listeIndividusSave)
-
-
-
-
-
-
-            }
-
 
 
         }

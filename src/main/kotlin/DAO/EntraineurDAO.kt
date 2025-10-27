@@ -104,29 +104,19 @@ class EntraineurDAO(val bdd: BDD = db) {
 
         if (isInsert) {
             // 🟢 Insertion
-            val sql = "INSERT INTO Entraineurs (nom, argents, is_npc, zone_actuelle) VALUES (?, ?, ?, ?)"
+            val sql = "INSERT INTO Entraineurs (nom, argents) VALUES (?, ?)"
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             requetePreparer.setString(1, entraineur.nom)
             requetePreparer.setInt(2, entraineur.argents)
-            requetePreparer.setBoolean(3, entraineur.isNpc)  // TRUE = NPC, FALSE = vrai joueur
-            if (entraineur.zoneActuelle != null) {
-                requetePreparer.setInt(4, entraineur.zoneActuelle!!)
-            } else {
-                requetePreparer.setNull(4, java.sql.Types.INTEGER)
-            }
+
         } else {
             // 🟡 Mise à jour
-            val sql = "UPDATE Entraineurs SET nom = ?, argents = ?, is_npc = ?, zone_actuelle = ? WHERE id = ?"
+            val sql = "UPDATE Entraineurs SET nom = ?, argents = ? WHERE id = ?"
             requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
             requetePreparer.setString(1, entraineur.nom)
             requetePreparer.setInt(2, entraineur.argents)
-            requetePreparer.setBoolean(3, entraineur.isNpc)
-            if (entraineur.zoneActuelle != null) {
-                requetePreparer.setInt(4, entraineur.zoneActuelle!!)
-            } else {
-                requetePreparer.setNull(4, java.sql.Types.INTEGER)
-            }
-            requetePreparer.setInt(5, entraineur.id)
+
+            requetePreparer.setInt(3, entraineur.id)
         }
 
         val nbLigneMaj = requetePreparer.executeUpdate()
@@ -183,13 +173,6 @@ class EntraineurDAO(val bdd: BDD = db) {
         }
         return result
     }
-
-
-
-
-
-
-
 
 
 }

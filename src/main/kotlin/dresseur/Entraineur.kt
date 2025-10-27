@@ -19,8 +19,6 @@ class Entraineur(
     var id: Int,
     var nom: String,
     var argents: Int,
-    var isNpc: Boolean = true,                // TRUE = NPC, FALSE = vrai joueur
-    var zoneActuelle: Int? = null,           // zone actuelle pour les vrais joueurs, null pour NPC
     var equipeMonstre: MutableList<IndividuMonstre> = mutableListOf(),
     var boiteMonstre: MutableList<IndividuMonstre> = mutableListOf(),
     var sacAItems: MutableList<Item> = mutableListOf()
@@ -30,15 +28,12 @@ class Entraineur(
      * Affiche les détails de l'entraîneur, y compris son nom et la quantité d'argent en sa possession.
      */
     override fun toString(): String {
-        return "Entraineur(id=$id, nom=$nom, argent=$argents, isNpc=$isNpc, zoneActuelle=$zoneActuelle)"
+        return "Entraineur(id=$id, nom=$nom, argent=$argents , JE SUIS LE GOAT, equipeMonstre=$equipeMonstre, boiteMonstre=$boiteMonstre, sacAItems=$sacAItems)"
     }
 
     fun afficheDetail() {
         println("Dresseur : $nom")
         println("Argents : $argents")
-        println("NPC : $isNpc")
-        if (!isNpc) {
-            println("Zone actuelle : ${zoneActuelle ?: "Non définie"}")
-        }
+
     }
 }

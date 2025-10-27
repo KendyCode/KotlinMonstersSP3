@@ -235,6 +235,9 @@ class IndividuMonstre(
     """.trimIndent())
 
     }
+    override fun toString(): String {
+        return "IndividuMonstre(nom=$nom, niveau=$niveau, espece=${espece.nom})"
+    }
 
 
 
