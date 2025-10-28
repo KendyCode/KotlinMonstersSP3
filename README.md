@@ -65,7 +65,7 @@ Mon projet charge également les **individusMonstre**, et les associe directemen
 
 ---
 
-## 🗃️ Structure de la base de données
+##  Structure de la base de données
 ![uml](uml_kotlin_monster.png)
 
 ### Tables créées
@@ -1457,7 +1457,7 @@ Transforme une entité SQL (`IndividuMonstreEntity`) en objet métier (`Individu
 
 ---
 
-## 📘 Exemple d’utilisation
+##  Exemple d’utilisation
 
 ```kotlin
 val individuDAO = IndividuMonstreDAO(bdd)

@@ -52,30 +52,55 @@ fun main() {
      *
      * @return Partie initialisée pour le joueur.
      */
-    fun nouvellePartie():Partie{
-        println("Bienvenue dans le monde magique des Pokémon!")
-        println("Rentrez votre nom : ")
-        val nomJoueur = readln() // Lecture du nom du joueur depuis la console
-        joueur.nom = nomJoueur
+//    fun nouvellePartie():Partie{
+//        println("Bienvenue dans le monde magique des Pokémon!")
+//        println("Rentrez votre nom : ")
+//        val nomJoueur = readln() // Lecture du nom du joueur depuis la console
+//        joueur.nom = nomJoueur
+//
+//        // Création de la partie avec le joueur et la première zone du jeu
+//        val PartieJoueur = Partie(1,joueur,listeZones[0])
+//
+//        // Réinitialisation de l'ID pour insertion en base
+//        joueur.id=0
+//        entraineurDAO.save(joueur) // Sauvegarde le joueur dans la BDD
+//        return PartieJoueur
+//    }
+//
+//    // --- Gestion du sac du joueur ---
+//    // Ajoute un objet au sac du joueur avant le début de la partie
+//    joueur.sacAItems.add(objet1)
+//
+//    // --- Démarrage de la partie ---
+//    val partie = nouvellePartie() // Crée une nouvelle partie
+//    partie.choixStarter() // Permet au joueur de choisir son montre de départ
+//    db.close() // Ferme la connexion à la BDD
+//    partie.jouer() // Lancement du gameplay principal
 
-        // Création de la partie avec le joueur et la première zone du jeu
-        val PartieJoueur = Partie(1,joueur,listeZones[0])
+    //ETAPE 9
+    var bakugo = EspeceMonstre(
+        id = 2,
+        nom = "Bakugo",
+        type = "Explosion/Combat",
+        baseAttaque = 95,
+        baseDefense = 70,
+        baseVitesse = 110,
+        baseAttaqueSpe = 100,
+        baseDefenseSpe = 60,
+        basePv = 85,
+        modAttaque = 1.2,
+        modDefense = 1.0,
+        modVitesse = 1.1,
+        modAttaqueSpe = 1.3,
+        modDefenseSpe = 0.9,
+        modPv = 1.0,
+        description = "Un jeune héros explosif capable de créer des explosions à partir de ses mains, rapide et impulsif. Soyez underground. #EKIP #667 #KIFFEUR #SPK #POUPETTE #LEPAIN #S/O LE MONDE MERCI LA FEVE , MERCI KEN CARSON , MERCI JEUNE MORTY MERCI TOUT LE MONDE. #XOXO commme Feng. Dans le bon",
+        particularites = "Peut générer des explosions et se déplacer à grande vitesse. Très agressif en combat.",
+        caracteres = "Impétueux, ambitieux, confiant, déterminé"
+    )
+    println(bakugo.afficheArt())
+    println(bakugo.afficheArt(false))
 
-        // Réinitialisation de l'ID pour insertion en base
-        joueur.id=0
-        entraineurDAO.save(joueur) // Sauvegarde le joueur dans la BDD
-        return PartieJoueur
-    }
-
-    // --- Gestion du sac du joueur ---
-    // Ajoute un objet au sac du joueur avant le début de la partie
-    joueur.sacAItems.add(objet1)
-
-    // --- Démarrage de la partie ---
-    val partie = nouvellePartie() // Crée une nouvelle partie
-    partie.choixStarter() // Permet au joueur de choisir son montre de départ
-    db.close() // Ferme la connexion à la BDD
-    partie.jouer() // Lancement du gameplay principal
 
 
 }
