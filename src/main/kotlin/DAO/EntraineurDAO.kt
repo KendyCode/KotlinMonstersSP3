@@ -2,6 +2,7 @@ package DAO
 
 import db
 import jdbc.BDD
+import monstre.IndividuMonstre
 import org.example.dresseur.Entraineur
 import java.sql.PreparedStatement
 import java.sql.SQLException
@@ -18,7 +19,8 @@ import java.sql.Statement
  * @param bdd L'objet de connexion à la base de données.
  */
 
-class EntraineurDAO(val bdd: BDD = db) {
+class EntraineurDAO(val bdd: BDD = db,
+                    private val individuMonstreDAO: IndividuMonstreDAO = IndividuMonstreDAO(bdd)) {
     /**
      * Récupère tous les entraîneurs présents dans la base de données.
      *
@@ -27,19 +29,26 @@ class EntraineurDAO(val bdd: BDD = db) {
     fun findAll(): MutableList<Entraineur> {
         val result = mutableListOf<Entraineur>()
         val sql = "SELECT * FROM Entraineurs"
-        val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
-        val resultatRequete = bdd.executePreparedStatement(requetePreparer)
+        val requete = bdd.connectionBDD!!.prepareStatement(sql)
+        val rs = bdd.executePreparedStatement(requete)
 
-        if (resultatRequete != null) {
-            while (resultatRequete.next()) {
-                val id = resultatRequete.getInt("id")
-                val nom = resultatRequete.getString("nom")
-                val argents = resultatRequete.getInt("argents")
-                result.add(Entraineur(id, nom, argents))
+        if (rs != null) {
+            while (rs.next()) {
+                val entraineur = Entraineur(
+                    id = rs.getInt("id"),
+                    nom = rs.getString("nom"),
+                    argents = rs.getInt("argents")
+                )
+
+                // 🧠 On charge les monstres liés
+                entraineur.equipeMonstre = findMonstresByEntraineurId(entraineur.id, isEquipe = true)
+                entraineur.boiteMonstre = findMonstresByEntraineurId(entraineur.id, isEquipe = false)
+
+                result.add(entraineur)
             }
         }
 
-        requetePreparer.close()
+        requete.close()
         return result
     }
 
@@ -50,21 +59,46 @@ class EntraineurDAO(val bdd: BDD = db) {
      * @return L'entraîneur trouvé ou `null` si aucun résultat.
      */
     fun findById(id: Int): Entraineur? {
-        var result: Entraineur? = null
         val sql = "SELECT * FROM Entraineurs WHERE id = ?"
-        val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
-        requetePreparer.setInt(1, id) // insere la valeur de l'id dans la requete preparer
-        val resultatRequete = bdd.executePreparedStatement(requetePreparer)
+        val requete = bdd.connectionBDD!!.prepareStatement(sql)
+        requete.setInt(1, id)
+        val rs = bdd.executePreparedStatement(requete)
 
-        if (resultatRequete != null && resultatRequete.next()) {
-            val nom = resultatRequete.getString("nom")
-            val argents = resultatRequete.getInt("argents")
-            result = Entraineur(id, nom, argents)
+        var entraineur: Entraineur? = null
+        if (rs != null && rs.next()) {
+            entraineur = Entraineur(
+                id = id,
+                nom = rs.getString("nom"),
+                argents = rs.getInt("argents")
+            )
+
+            entraineur.equipeMonstre = findMonstresByEntraineurId(id, isEquipe = true)
+            entraineur.boiteMonstre = findMonstresByEntraineurId(id, isEquipe = false)
         }
 
-        requetePreparer.close()
-        return result
+        requete.close()
+        return entraineur
     }
+
+    fun findByIdLight(id: Int): Entraineur? {
+        val sql = "SELECT id, nom, argents FROM Entraineurs WHERE id = ?"
+        val requete = bdd.connectionBDD!!.prepareStatement(sql)
+        requete.setInt(1, id)
+        val rs = bdd.executePreparedStatement(requete)
+
+        var entraineur: Entraineur? = null
+        if (rs != null && rs.next()) {
+            entraineur = Entraineur(
+                id = rs.getInt("id"),
+                nom = rs.getString("nom"),
+                argents = rs.getInt("argents")
+            )
+        }
+
+        requete.close()
+        return entraineur
+    }
+
 
     /**
      * Recherche un entraîneur par son nom.
@@ -172,6 +206,33 @@ class EntraineurDAO(val bdd: BDD = db) {
             if (sauvegarde != null) result.add(sauvegarde)
         }
         return result
+    }
+
+    /**
+     * Récupère tous les individus de monstres appartenant à un entraîneur.
+     * (équipe ou boîte selon le paramètre)
+     */
+    private fun findMonstresByEntraineurId(idEntraineur: Int, isEquipe: Boolean): MutableList<IndividuMonstre> {
+        val monstres = mutableListOf<IndividuMonstre>()
+        val sql = if (isEquipe)
+            "SELECT * FROM IndividuMonstre WHERE entraineur_equipe_id = ?"
+        else
+            "SELECT * FROM IndividuMonstre WHERE entraineur_boite_id = ?"
+
+        val requete = bdd.connectionBDD!!.prepareStatement(sql)
+        requete.setInt(1, idEntraineur)
+        val rs = bdd.executePreparedStatement(requete)
+
+        if (rs != null) {
+            while (rs.next()) {
+                val entity = individuMonstreDAO.findById(rs.getInt("id"))
+                val monstre = entity?.let { individuMonstreDAO.toModel(it) }
+                if (monstre != null) monstres.add(monstre)
+            }
+        }
+
+        requete.close()
+        return monstres
     }
 
 

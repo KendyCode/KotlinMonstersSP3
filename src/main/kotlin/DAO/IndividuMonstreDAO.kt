@@ -200,8 +200,8 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
         val espece = entity.especeId?.let { especeMonstreDAO.findById(it) } ?: return null
 
         // Récupère l'entraîneur (équipe ou boîte)
-        val entraineur = entity.entraineurEquipeId?.let { entraineurDAO.findById(it) }
-            ?: entity.entraineurBoiteId?.let { entraineurDAO.findById(it) }
+        val entraineur = entity.entraineurEquipeId?.let { entraineurDAO.findByIdLight(it) }
+            ?: entity.entraineurBoiteId?.let { entraineurDAO.findByIdLight(it) }
 
         // Crée l’objet de jeu
         val monstre = IndividuMonstre(

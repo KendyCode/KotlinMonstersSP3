@@ -37,7 +37,7 @@ var rival = Entraineur(2,"Regis",200)
 var objet1 = MonsterKube(1,"cube", "description",11.0)
 
 fun main() {
-
+    println(listeEntraineur[2].equipeMonstre)
     println(listeZones)
 
 
@@ -71,29 +71,29 @@ fun main() {
 
 
 
-//    fun nouvellePartie():Partie{
-//        println("Bienvenue dans le monde magique des Pokémon!")
-//        println("Rentrez votre nom : ")
-//        val nomJoueur = readln()
-//        joueur.nom = nomJoueur
-//
-//
-//
-//        val PartieJoueur = Partie(1,joueur,listeZones[0])
-//        joueur.id=0
-//        entraineurDAO.save(joueur)
-//        return PartieJoueur
-//    }
-//
-//
-//
-//    joueur.sacAItems.add(objet1)
-//
-//    val partie = nouvellePartie()
-//    partie.choixStarter()
-//
-//    db.close()
-//    partie.jouer()
+    fun nouvellePartie():Partie{
+        println("Bienvenue dans le monde magique des Pokémon!")
+        println("Rentrez votre nom : ")
+        val nomJoueur = readln()
+        joueur.nom = nomJoueur
+
+
+
+        val PartieJoueur = Partie(1,joueur,listeZones[0])
+        joueur.id=0
+        entraineurDAO.save(joueur)
+        return PartieJoueur
+    }
+
+
+
+    joueur.sacAItems.add(objet1)
+
+    val partie = nouvellePartie()
+    partie.choixStarter()
+
+    db.close()
+    partie.jouer()
 
 
 }
