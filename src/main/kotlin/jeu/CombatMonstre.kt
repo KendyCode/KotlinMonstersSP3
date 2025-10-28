@@ -76,9 +76,9 @@ class CombatMonstre(
     fun actionAdversaire(){
         if(monstreSauvage.pv > 0){
             monstreSauvage.attaquer(monstreJoueur)
+        } else {
+            println("${monstreSauvage.nom} est K.O. et ne peut plus attaquer !")
         }
-
-
     }
     /**
      * Gère le tour d’action du joueur.
@@ -99,8 +99,12 @@ class CombatMonstre(
         else{
             println("Choisis entre (1 : ATTAQUER,2 : PRENDRE UN ITEM,3 : REMPLACER SON MONSTRE)")
             var choixAction = readln().toInt()
-            if (choixAction==1){
-                monstreJoueur.attaquer(monstreSauvage)
+            if (choixAction == 1) {
+                if (monstreJoueur.pv > 0) {
+                    monstreJoueur.attaquer(monstreSauvage)
+                } else {
+                    println("${monstreJoueur.nom} est K.O. et ne peut plus attaquer !")
+                }
                 return true
             }
             else if(choixAction==2){
@@ -155,7 +159,8 @@ class CombatMonstre(
         println(monstreSauvage.espece.afficheArt())
         println(monstreSauvage.espece.afficheArt(false))
 
-        println("MOOOOOONNNN MONSTTRRREEEEEEEEEEEEEEEEE")
+        println("Mon Monstre")
+        println(monstreJoueur.nom)
         println("Niveau : ${monstreJoueur.niveau}")
         println("PV : ${monstreJoueur.pv} / ${monstreJoueur.pvMax}")
     }
@@ -170,6 +175,19 @@ class CombatMonstre(
      * - Sinon, le monstre sauvage attaque d’abord.
      */
     fun jouer(){
+
+        // 🧱 Vérification avant tout
+        if (monstreJoueur.pv <= 0) {
+            println("${monstreJoueur.nom} est K.O. ! Choisis un autre monstre.")
+            actionJoueur() // propose de changer de monstre
+            return // on arrête ce round
+        }
+
+        if (monstreSauvage.pv <= 0) {
+            println("${monstreSauvage.nom} est déjà K.O. ! Le combat est terminé.")
+            return
+        }
+
         var joueurPlusRapide = (monstreJoueur.vitesse >= monstreSauvage.vitesse)
         println(afficheCombat())
         if (joueurPlusRapide){
@@ -204,11 +222,22 @@ class CombatMonstre(
      * - Affiche un message de fin de partie.
      */
     fun lanceCombat() {
+        // Définit le premier monstre vivant comme monstre actif
+        monstreJoueur = joueur.equipeMonstre.firstOrNull { it.pv > 0 }
+            ?: run {
+                println("Tous vos monstres sont K.O. !")
+                return
+            }
+
+
+
+        // 3️⃣ Boucle principale du combat
         while (!gameOver() && !joueurGagne()) {
             this.jouer()
             println("======== Fin du Round : $round ========")
             round++
         }
+
         if (gameOver()) {
             joueur.equipeMonstre.forEach { it.pv = it.pvMax }
             println("Game Over !")
