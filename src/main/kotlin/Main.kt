@@ -30,9 +30,8 @@ val listeZones = zoneDAO.findAll()
 var joueur = Entraineur(1, "Sacha", 100)
 var rival = Entraineur(2,"Regis",200)
 
-//var route1 = zoneDAO.findById(1)!!
-//var route2 = zoneDAO.findById(2)!!
-//var route3 = zoneDAO.findById(3)!!
+
+
 
 
 var objet1 = MonsterKube(1,"cube", "description",11.0)
@@ -41,8 +40,11 @@ fun main() {
 
     println(listeZones)
 
+
 //    for (entity in listeIndividus) {
+//
 //        val monstre = individuMonstreDAO.toModel(entity) ?: continue
+//
 //
 //        // Trouver l'entraîneur correspondant à entraineur_equipe_id
 //        val entraineur = listeEntraineur.find { it.id == entity.entraineurEquipeId }
@@ -63,8 +65,8 @@ fun main() {
 //            println("   Équipe : ${entraineur.equipeMonstre.joinToString { it.nom }}")
 //        }
 //    }
-//
-//    println(listeEntraineur)
+
+
 
 
 
@@ -77,16 +79,13 @@ fun main() {
 //
 //
 //
-//        val PartieJoueur = Partie(1,joueur,route1)
+//        val PartieJoueur = Partie(1,joueur,listeZones[0])
 //        joueur.id=0
 //        entraineurDAO.save(joueur)
 //        return PartieJoueur
 //    }
 //
-////    route1.zoneSuivante = route2
-////    route2.zonePrecedente = route1
-////    route2.zoneSuivante = route3
-////    route3.zonePrecedente = route2
+//
 //
 //    joueur.sacAItems.add(objet1)
 //
