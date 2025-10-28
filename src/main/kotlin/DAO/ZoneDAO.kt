@@ -8,17 +8,42 @@ import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Statement
 
+/**
+ * DAO (Data Access Object) pour la table `zones`.
+ *
+ * Fournit une interface pour effectuer des opérations CRUD (Create, Read, Update, Delete)
+ * sur les zones du jeu. Chaque zone peut contenir plusieurs espèces de monstres
+ * et être reliée à d'autres zones via `zoneSuivante` et `zonePrecedente`.
+ *
+ * ⚡ Fonctionnalités principales :
+ * - 🔍 Lecture : findAll(), findById()
+ * - 💾 Sauvegarde : save(), saveAll()
+ * - ❌ Suppression : deleteById()
+ * - 🛠 Gestion des relations Zone ↔ Espèces de Monstres
+ *
+ * @param bdd Objet de connexion à la base de données (par défaut `db` global)
+ * @param especeMonstreDAO DAO utilisé pour récupérer les espèces de monstres liées.
+ */
 class ZoneDAO(
     val bdd: BDD = db,
     private val especeMonstreDAO: EspeceMonstreDAO = EspeceMonstreDAO(bdd)
 ) {
 
     // --- FIND ALL ---
+    /**
+     * Récupère toutes les zones de la base.
+     *
+     * ⚡ Étapes :
+     * 1. Charge toutes les zones avec leurs propriétés de base (`id`, `nom`, `expZone`) et les espèces de monstres.
+     * 2. Stocke les zones dans une map temporaire pour relier `zoneSuivante` et `zonePrecedente`.
+     *
+     * @return Liste mutable de zones avec relations et espèces de monstres correctement liées.
+     */
     fun findAll(): MutableList<Zone> {
         val zones = mutableListOf<Zone>()
         val zoneMap = mutableMapOf<Int, Zone>()
 
-        // 1️⃣ Charger toutes les zones sans relations
+        // Charger toutes les zones sans relations
         val sql = "SELECT * FROM zones"
         val requete = bdd.connectionBDD!!.prepareStatement(sql)
         val result = bdd.executePreparedStatement(requete)
@@ -37,7 +62,7 @@ class ZoneDAO(
         }
         requete.close()
 
-        // 2️⃣ Relier zoneSuivante et zonePrecedente
+        // Relier zoneSuivante et zonePrecedente
         for (zone in zones) {
             val sqlLink = "SELECT fk_zoneSuivante_id, fk_zonePrecedente_id FROM zones WHERE id = ?"
             val reqLink = bdd.connectionBDD!!.prepareStatement(sqlLink)
@@ -56,11 +81,27 @@ class ZoneDAO(
     }
 
     // --- FIND BY ID ---
+    /**
+     * Recherche une zone par son identifiant unique.
+     *
+     * ⚡ Cette méthode utilise findAll() et filtre la zone correspondante.
+     *
+     * @param id Identifiant de la zone.
+     * @return Zone correspondante ou `null` si non trouvée.
+     */
     fun findById(id: Int): Zone? {
         return findAll().firstOrNull { it.id == id }
     }
 
     // --- TROUVER LES ESPÈCES LIÉES À UNE ZONE ---
+    /**
+     * Récupère toutes les espèces de monstres associées à une zone.
+     *
+     * ⚡ Utilise la table de jointure `zones_especesmonstre` et [EspeceMonstreDAO].
+     *
+     * @param zoneId ID de la zone pour laquelle récupérer les espèces.
+     * @return Liste mutable d'espèces de monstres.
+     */
     private fun findEspecesByZoneId(zoneId: Int): MutableList<EspeceMonstre> {
         val especes = mutableListOf<EspeceMonstre>()
         val sql = """
@@ -83,6 +124,17 @@ class ZoneDAO(
     }
 
     // --- SAVE (INSERT / UPDATE) ---
+    /**
+     * Sauvegarde une zone dans la base de données.
+     *
+     * ⚡ Fonctionnement :
+     * - Si `zone.id == 0` : insertion et récupération de l'ID généré.
+     * - Sinon : mise à jour de la zone existante.
+     * - Met également à jour la table de jointure `zones_especesmonstre`.
+     *
+     * @param zone Zone à sauvegarder.
+     * @return Zone sauvegardée avec ID mis à jour si insertion.
+     */
     fun save(zone: Zone): Zone? {
         val requete: PreparedStatement
         val isInsert = zone.id == 0
@@ -124,6 +176,14 @@ class ZoneDAO(
     }
 
     // --- SAVE ALL ---
+    /**
+     * Sauvegarde une collection de zones.
+     *
+     * Appelle [save] pour chaque zone et retourne celles sauvegardées avec succès.
+     *
+     * @param zones Collection de zones à sauvegarder.
+     * @return Liste des zones sauvegardées.
+     */
     fun saveAll(zones: Collection<Zone>): MutableList<Zone> {
         val result = mutableListOf<Zone>()
         for (z in zones) {
@@ -134,6 +194,16 @@ class ZoneDAO(
     }
 
     // --- DELETE BY ID ---
+    /**
+     * Supprime une zone par son ID.
+     *
+     * ⚡ Étapes :
+     * 1. Supprime les relations dans `zones_especesmonstre` pour éviter les clés étrangères orphelines.
+     * 2. Supprime la zone elle-même.
+     *
+     * @param id ID de la zone à supprimer.
+     * @return `true` si la suppression a réussi, `false` sinon.
+     */
     fun deleteById(id: Int): Boolean {
         // Supprimer d'abord les relations dans zones_especesmonstre
         val sqlRelations = "DELETE FROM zones_especesmonstre WHERE zone_id = ?"
@@ -156,7 +226,16 @@ class ZoneDAO(
         }
     }
 
-    // --- UTILITAIRE : Sauvegarder les relations Zone <-> Especes ---
+    // --- UTILITAIRE : Sauvegarder les relations Zone <-> Espèces ---
+    /**
+     * Met à jour les relations entre une zone et ses espèces de monstres dans la table `zones_especesmonstre`.
+     *
+     * ⚡ Fonctionnement :
+     * 1. Supprime d'abord toutes les relations existantes pour cette zone.
+     * 2. Insère les nouvelles relations correspondant à `zone.especesMonstres`.
+     *
+     * @param zone Zone pour laquelle mettre à jour les relations.
+     */
     private fun saveZoneEspeces(zone: Zone) {
         // Supprimer d’abord les anciennes relations
         val deleteSql = "DELETE FROM zones_especesmonstre WHERE zone_id = ?"

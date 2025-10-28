@@ -5,28 +5,35 @@ import java.io.File
 /**
  * Représente une espèce de monstre dans le jeu.
  *
- * Une espèce de monstre sert de "modèle" pour créer des individus. Elle définit les caractéristiques
- * de base que tous les monstres de cette espèce auront, telles que les statistiques initiales,
- * les multiplicateurs de croissance, le type et les particularités.
+ * Cette classe sert de "modèle" pour créer des individus ([IndividuMonstre]).
+ * Chaque espèce définit :
+ *  - Les statistiques de base que tous ses individus possèdent.
+ *  - Les multiplicateurs de croissance pour les montées de niveau.
+ *  - Le type et les particularités de l'espèce.
+ *  - Une représentation artistique ASCII pour l'affichage.
  *
- * @property id L'identifiant unique de l'espèce.
- * @property nom Le nom de l'espèce de monstre (ex: "Dracofeu").
- * @property type Le ou les éléments du monstre (ex: "Feu", "Eau", "Plante").
- * @property baseAttaque La valeur de base de l'attaque physique.
- * @property baseDefense La valeur de base de la défense physique.
- * @property baseVitesse La valeur de base de la vitesse.
- * @property baseAttaqueSpe La valeur de base de l'attaque spéciale.
- * @property baseDefenseSpe La valeur de base de la défense spéciale.
- * @property basePv La valeur de base des points de vie.
- * @property modAttaque Multiplicateur de croissance pour l'attaque physique lors des montées de niveau.
- * @property modDefense Multiplicateur de croissance pour la défense physique.
- * @property modVitesse Multiplicateur de croissance pour la vitesse.
- * @property modAttaqueSpe Multiplicateur de croissance pour l'attaque spéciale.
- * @property modDefenseSpe Multiplicateur de croissance pour la défense spéciale.
- * @property modPv Multiplicateur de croissance pour les points de vie.
- * @property description Une description textuelle de l'espèce.
- * @property particularites Informations supplémentaires sur les particularités ou aptitudes spéciales de l'espèce.
- * @property caracteres Représentation artistique ASCII ou symbole illustrant l'espèce.
+ * Une espèce ne contient pas de statistiques spécifiques à un individu,
+ * elles sont partagées par tous les monstres de cette espèce.
+ *
+ * @property id Identifiant unique permettant de référencer cette espèce dans une base de données.
+ * @property nom Nom de l'espèce (ex : "Dracofeu").
+ * @property type Type élémentaire du monstre (ex : "Feu", "Eau") pouvant influencer
+ *               l'efficacité des attaques et défenses contre d'autres types.
+ * @property baseAttaque Valeur initiale de l'attaque physique pour un individu de cette espèce.
+ * @property baseDefense Valeur initiale de la défense physique.
+ * @property baseVitesse Valeur initiale de la vitesse.
+ * @property baseAttaqueSpe Valeur initiale de l'attaque spéciale.
+ * @property baseDefenseSpe Valeur initiale de la défense spéciale.
+ * @property basePv Valeur initiale des points de vie.
+ * @property modAttaque Multiplicateur de croissance de l'attaque physique lors des level-ups.
+ * @property modDefense Multiplicateur de croissance de la défense physique.
+ * @property modVitesse Multiplicateur de croissance de la vitesse.
+ * @property modAttaqueSpe Multiplicateur de croissance de l'attaque spéciale.
+ * @property modDefenseSpe Multiplicateur de croissance de la défense spéciale.
+ * @property modPv Multiplicateur de croissance des points de vie.
+ * @property description Description textuelle de l'espèce pour l'utilisateur.
+ * @property particularites Informations sur les particularités ou aptitudes spéciales.
+ * @property caracteres Représentation artistique ASCII ou symbole du monstre.
  */
 class EspeceMonstre(
     var id : Int,
@@ -51,10 +58,16 @@ class EspeceMonstre(
     /**
      * Affiche la représentation artistique ASCII du monstre.
      *
-     * @param deFace Détermine si l'art affiché est de face (true) ou de dos (false).
-     *               La valeur par défaut est true.
-     * @return Une chaîne de caractères contenant l'art ASCII du monstre avec les codes couleur ANSI.
-     *         L'art est lu à partir d'un fichier texte dans le dossier resources/art.
+     * Les fichiers ASCII sont stockés dans :
+     * `src/main/resources/art/<nom_de_l_espece_lowercase>/front.txt` ou `back.txt`.
+     * Cela permet de différencier la vue de face et la vue de dos du monstre.
+     *
+     * Le contenu est sécurisé en remplaçant certains caractères :
+     * - "/" devient "∕" pour éviter la confusion avec le séparateur de chemin.
+     * - Les codes ANSI (\u001B) sont conservés pour le formatage couleur dans la console.
+     *
+     * @param deFace Si true, renvoie l'art de face, sinon de dos.
+     * @return Chaîne de caractères contenant l'art ASCII avec les codes couleur.
      */
     fun afficheArt(deFace: Boolean=true): String{
         val nomFichier = if(deFace) "front" else "back";
@@ -63,6 +76,12 @@ class EspeceMonstre(
         return safeArt.replace("\\u001B", "\u001B")
     }
 
+    /**
+     * Représentation textuelle simplifiée de l'espèce.
+     *
+     * Utile pour le debug ou l'affichage rapide dans la console.
+     * Ne montre que les informations essentielles : id, nom, type et points de vie de base.
+     */
     override fun toString(): String {
         return "EspeceMonstre(id=$id, nom=$nom, type=$type, basePv=$basePv)"
     }

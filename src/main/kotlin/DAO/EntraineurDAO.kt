@@ -9,22 +9,32 @@ import java.sql.SQLException
 import java.sql.Statement
 
 /**
- * DAO (Data Access Object) permettant d'interagir avec la table `Entraineurs`.
+ * DAO (Data Access Object) pour la table `Entraineurs`.
  *
- * Cette classe gère les opérations CRUD :
- * - 🔍 Lecture (findAll, findById, findByNom)
- * - 💾 Sauvegarde (save, saveAll)
- * - ❌ Suppression (deleteById)
+ * Cette classe encapsule toutes les opérations nécessaires pour interagir avec
+ * la base de données concernant les entraîneurs.
  *
- * @param bdd L'objet de connexion à la base de données.
+ * Elle fournit des méthodes CRUD complètes :
+ * - 🔍 Lecture : findAll(), findById(), findByNom(), findByIdLight()
+ * - 💾 Sauvegarde : save(), saveAll()
+ * - ❌ Suppression : deleteById()
+ *
+ * Elle utilise un objet [BDD] pour gérer la connexion et l'exécution des requêtes SQL.
+ *
+ * @param bdd Objet de connexion à la base de données.
+ * @param individuMonstreDAO DAO associé pour récupérer les monstres liés à un entraîneur.
  */
 
 class EntraineurDAO(val bdd: BDD = db,
                     private val individuMonstreDAO: IndividuMonstreDAO = IndividuMonstreDAO(bdd)) {
     /**
-     * Récupère tous les entraîneurs présents dans la base de données.
+     * Récupère tous les entraîneurs de la base de données.
      *
-     * @return Une liste mutable d'entraîneurs trouvés.
+     * Pour chaque entraîneur trouvé :
+     * 1. Instancie un objet [Entraineur].
+     * 2. Charge les monstres de l'équipe et de la boîte via [findMonstresByEntraineurId].
+     *
+     * @return Liste mutable contenant tous les entraîneurs trouvés.
      */
     fun findAll(): MutableList<Entraineur> {
         val result = mutableListOf<Entraineur>()
@@ -53,10 +63,10 @@ class EntraineurDAO(val bdd: BDD = db,
     }
 
     /**
-     * Recherche un entraîneur par son identifiant unique.
+     * Recherche un entraîneur par son identifiant.
      *
-     * @param id L'identifiant de l'entraîneur.
-     * @return L'entraîneur trouvé ou `null` si aucun résultat.
+     * @param id Identifiant unique de l'entraîneur.
+     * @return Objet [Entraineur] ou `null` si non trouvé.
      */
     fun findById(id: Int): Entraineur? {
         val sql = "SELECT * FROM Entraineurs WHERE id = ?"
@@ -71,7 +81,7 @@ class EntraineurDAO(val bdd: BDD = db,
                 nom = rs.getString("nom"),
                 argents = rs.getInt("argents")
             )
-
+            // Récupération des monstres associés
             entraineur.equipeMonstre = findMonstresByEntraineurId(id, isEquipe = true)
             entraineur.boiteMonstre = findMonstresByEntraineurId(id, isEquipe = false)
         }
@@ -80,6 +90,10 @@ class EntraineurDAO(val bdd: BDD = db,
         return entraineur
     }
 
+    /**
+     * Version "light" de findById, ne charge que les informations essentielles.
+     * Utile pour afficher des listes ou éviter de charger tous les monstres.
+     */
     fun findByIdLight(id: Int): Entraineur? {
         val sql = "SELECT id, nom, argents FROM Entraineurs WHERE id = ?"
         val requete = bdd.connectionBDD!!.prepareStatement(sql)
@@ -101,10 +115,10 @@ class EntraineurDAO(val bdd: BDD = db,
 
 
     /**
-     * Recherche un entraîneur par son nom.
+     * Recherche un ou plusieurs entraîneurs par nom exact.
      *
-     * @param nomRechercher Le nom de l'entraîneur à rechercher.
-     * @return Une liste d'entraîneurs correspondant au nom donné.
+     * @param nomRechercher Nom de l'entraîneur recherché.
+     * @return Liste mutable contenant les entraîneurs correspondants.
      */
     fun findByNom(nomRechercher: String): MutableList<Entraineur> {
         val result = mutableListOf<Entraineur>()
@@ -127,10 +141,13 @@ class EntraineurDAO(val bdd: BDD = db,
     }
 
     /**
-     * Insère ou met à jour un entraîneur dans la base.
+     * Sauvegarde un entraîneur dans la base.
      *
-     * @param entraineur L'entraîneur à sauvegarder.
-     * @return L'entraîneur sauvegardé avec son ID mis à jour si insertion.
+     * Si `entraineur.id == 0`, il s'agit d'une insertion.
+     * Sinon, il s'agit d'une mise à jour.
+     *
+     * @param entraineur Entraîneur à sauvegarder.
+     * @return L'entraîneur avec l'ID mis à jour (pour insertion) ou null en cas d'échec.
      */
     fun save(entraineur: Entraineur): Entraineur? {
         val requetePreparer: PreparedStatement
@@ -173,11 +190,11 @@ class EntraineurDAO(val bdd: BDD = db,
     }
 
     /**
-    * Supprime un entraîneur par son identifiant.
-    *
-    * @param id L'ID de l'entraîneur à supprimer.
-    * @return `true` si la suppression a réussi, sinon `false`.
-    */
+     * Supprime un entraîneur via son identifiant.
+     *
+     * @param id ID de l'entraîneur à supprimer.
+     * @return `true` si la suppression a réussi, `false` sinon.
+     */
     fun deleteById(id: Int): Boolean {
         val sql = "DELETE FROM Entraineurs WHERE id = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
@@ -194,10 +211,10 @@ class EntraineurDAO(val bdd: BDD = db,
     }
 
     /**
-     * Sauvegarde plusieurs entraîneurs dans la base de données.
+     * Sauvegarde une collection d'entraîneurs.
      *
      * @param entraineurs Liste d'entraîneurs à sauvegarder.
-     * @return Liste des entraîneurs sauvegardés.
+     * @return Liste des entraîneurs ayant été sauvegardés avec succès.
      */
     fun saveAll(entraineurs: Collection<Entraineur>): MutableList<Entraineur> {
         val result = mutableListOf<Entraineur>()
@@ -209,8 +226,11 @@ class EntraineurDAO(val bdd: BDD = db,
     }
 
     /**
-     * Récupère tous les individus de monstres appartenant à un entraîneur.
-     * (équipe ou boîte selon le paramètre)
+     * Récupère tous les monstres liés à un entraîneur.
+     *
+     * @param idEntraineur ID de l'entraîneur.
+     * @param isEquipe True → récupère l’équipe active ; False → récupère la boîte.
+     * @return Liste mutable des monstres correspondants.
      */
     private fun findMonstresByEntraineurId(idEntraineur: Int, isEquipe: Boolean): MutableList<IndividuMonstre> {
         val monstres = mutableListOf<IndividuMonstre>()

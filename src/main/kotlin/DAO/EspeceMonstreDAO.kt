@@ -9,19 +9,29 @@ import java.sql.SQLException
 import java.sql.Statement
 
 /**
- * DAO pour la table `EspecesMonstre`.
+ * DAO (Data Access Object) pour la table `EspecesMonstre`.
  *
- * Gère les opérations CRUD :
- * - 🔍 Lecture (findAll, findById, findByNom)
- * - 💾 Sauvegarde (save, saveAll)
- * - ❌ Suppression (deleteById)
+ * Fournit une interface pour effectuer des opérations CRUD (Create, Read, Update, Delete) sur la table des espèces de monstres.
  *
- * @param bdd L’objet de connexion à la base de données.
+ * ⚡ Fonctionnalités principales :
+ * - 🔍 Lecture : findAll(), findById(), findByNom()
+ * - 💾 Sauvegarde : save(), saveAll()
+ * - ❌ Suppression : deleteById()
+ *
+ * Utilise un objet [BDD] pour gérer la connexion et l'exécution des requêtes SQL.
+ *
+ * @param bdd Objet de connexion à la base de données (par défaut `db` global).
  */
 class EspeceMonstreDAO(val bdd: BDD = db) {
 
     /**
-     * Récupère toutes les espèces de monstres.
+     * Récupère toutes les espèces de monstres présentes dans la base.
+     *
+     * Pour chaque ligne de la table `EspecesMonstre` :
+     * - Instancie un objet [EspeceMonstre].
+     * - Remplit tous les attributs de base, modificateurs et descriptions.
+     *
+     * @return Liste mutable de toutes les espèces de monstres.
      */
     fun findAll(): MutableList<EspeceMonstre> {
         val result = mutableListOf<EspeceMonstre>()
@@ -64,7 +74,10 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Recherche une espèce par son identifiant.
+     * Recherche une espèce de monstre par son identifiant unique.
+     *
+     * @param id Identifiant unique de l'espèce.
+     * @return L'objet [EspeceMonstre] correspondant ou `null` si aucun résultat.
      */
     fun findById(id: Int): EspeceMonstre? {
         val sql = "SELECT * FROM EspecesMonstre WHERE id = ?"
@@ -104,7 +117,10 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Recherche les espèces par leur nom.
+     * Recherche les espèces de monstres par leur nom exact.
+     *
+     * @param nomRechercher Nom de l'espèce à rechercher.
+     * @return Liste mutable d'espèces correspondant au nom fourni.
      */
     fun findByNom(nomRechercher: String): MutableList<EspeceMonstre> {
         val result = mutableListOf<EspeceMonstre>()
@@ -148,7 +164,13 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Insère ou met à jour une espèce de monstre.
+     * Sauvegarde une espèce de monstre dans la base.
+     *
+     * - Si `espece.id == 0`, une nouvelle entrée est insérée et l'ID est récupéré.
+     * - Sinon, la ligne existante est mise à jour.
+     *
+     * @param espece Espèce à sauvegarder.
+     * @return L'objet sauvegardé avec son ID, ou `null` en cas d'échec.
      */
     fun save(espece: EspeceMonstre): EspeceMonstre? {
         if (espece.id == 0) {
@@ -227,7 +249,10 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Supprime une espèce de monstre par ID.
+     * Supprime une espèce par son ID.
+     *
+     * @param id ID de l'espèce à supprimer.
+     * @return `true` si la suppression a réussi, sinon `false`.
      */
     fun deleteById(id: Int): Boolean {
         val sql = "DELETE FROM EspecesMonstre WHERE id = ?"
@@ -245,7 +270,10 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Sauvegarde une liste d'espèces.
+     * Sauvegarde une collection d'espèces de monstres.
+     *
+     * @param especes Collection des espèces à sauvegarder.
+     * @return Liste des espèces sauvegardées avec succès.
      */
     fun saveAll(especes: Collection<EspeceMonstre>): MutableList<EspeceMonstre> {
         val result = mutableListOf<EspeceMonstre>()
@@ -257,8 +285,9 @@ class EspeceMonstreDAO(val bdd: BDD = db) {
     }
 
     /**
-     * Utilitaire : transforme une ligne SQL en objet EspeceMonstre.
-     * Sert notamment à ZoneDAO pour recréer les espèces liées à une zone.
+     * Utilitaire pour transformer un ResultSet SQL en objet [EspeceMonstre].
+     *
+     * Permet de centraliser la logique de mapping et d’éviter les répétitions.
      */
     fun mapResultSetToEspece(rs: java.sql.ResultSet): EspeceMonstre {
         return EspeceMonstre(

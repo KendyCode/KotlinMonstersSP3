@@ -13,18 +13,31 @@ import java.sql.SQLException
 import java.sql.Statement
 
 /**
- * DAO (Data Access Object) permettant d'interagir avec la table `Entraineurs`.
+ * DAO (Data Access Object) pour la table `IndividuMonstre`.
  *
- * Cette classe gère les opérations CRUD :
- * - 🔍 Lecture (findAll, findById, findByNom)
- * - 💾 Sauvegarde (save, saveAll)
- * - ❌ Suppression (deleteById)
+ * Fournit une interface pour effectuer des opérations CRUD (Create, Read, Update, Delete)
+ * sur les individus monstres, en s'assurant que chaque objet peut être converti entre :
+ * - [IndividuMonstreEntity] : représentation de la base de données
+ * - [IndividuMonstre] : objet métier du jeu
  *
- * @param bdd L'objet de connexion à la base de données.
+ * ⚡ Fonctionnalités principales :
+ * - 🔍 Lecture : findAll(), findById(), findByNom()
+ * - 💾 Sauvegarde : save(), saveAll()
+ * - ❌ Suppression : deleteById()
+ * - 🛠 Conversion Base ↔ Objet Métier : mapResultSet(), toModel()
+ *
+ * @param bdd Objet de connexion à la base de données (par défaut `db` global).
  */
 class IndividuMonstreDAO(val bdd: BDD = db) {
 
     // --- FIND ALL ---
+    /**
+     * Récupère tous les individus monstres de la base.
+     *
+     * Pour chaque ligne SQL, appelle [mapResultSet] pour créer l'entité correspondante.
+     *
+     * @return Liste mutable de [IndividuMonstreEntity].
+     */
     fun findAll(): MutableList<IndividuMonstreEntity> {
         val result = mutableListOf<IndividuMonstreEntity>()
         val sql = "SELECT * FROM IndividuMonstre"
@@ -42,6 +55,12 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- FIND BY ID ---
+    /**
+     * Recherche un individu par son identifiant unique.
+     *
+     * @param id Identifiant de l'individu.
+     * @return [IndividuMonstreEntity] correspondant ou `null` si non trouvé.
+     */
     fun findById(id: Int): IndividuMonstreEntity? {
         val sql = "SELECT * FROM IndividuMonstre WHERE id = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
@@ -57,6 +76,12 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- FIND BY NOM ---
+    /**
+     * Recherche les individus par leur nom exact.
+     *
+     * @param nomRechercher Nom de l'individu à rechercher.
+     * @return Liste mutable d'individus correspondant au nom.
+     */
     fun findByNom(nomRechercher: String): MutableList<IndividuMonstreEntity> {
         val result = mutableListOf<IndividuMonstreEntity>()
         val sql = "SELECT * FROM IndividuMonstre WHERE nom = ?"
@@ -75,6 +100,17 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- SAVE (INSERT / UPDATE) ---
+    /**
+     * Sauvegarde un individu monstre.
+     *
+     * ⚡ Fonctionnement :
+     * - Si `individu.id == 0`, insertion dans la base et récupération de l'ID généré.
+     * - Sinon, mise à jour de la ligne existante.
+     * - Les relations vers les espèces et entraîneurs peuvent être `null` et sont correctement gérées.
+     *
+     * @param individu Entité à sauvegarder.
+     * @return L'entité sauvegardée avec son ID, ou `null` si la mise à jour a échoué.
+     */
     fun save(individu: IndividuMonstreEntity): IndividuMonstreEntity? {
         val requetePreparer: PreparedStatement
 
@@ -149,6 +185,22 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- SAVE ALL ---
+    /**
+     * Sauvegarde une collection d'individus.
+     *
+     * Appelle [save] pour chaque individu et ne retient que ceux sauvegardés avec succès.
+     *
+     * @param individus Collection d'individus à sauvegarder.
+     * @return Liste des individus sauvegardés.
+     */// --- SAVE ALL ---
+    /**
+     * Sauvegarde une collection d'individus.
+     *
+     * Appelle [save] pour chaque individu et ne retient que ceux sauvegardés avec succès.
+     *
+     * @param individus Collection d'individus à sauvegarder.
+     * @return Liste des individus sauvegardés.
+     */
     fun saveAll(individus: Collection<IndividuMonstreEntity>): MutableList<IndividuMonstreEntity> {
         val result = mutableListOf<IndividuMonstreEntity>()
         for (i in individus) {
@@ -159,6 +211,15 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- DELETE BY ID ---
+    /**
+     * Supprime un individu par son ID.
+     *
+     * Utilise un PreparedStatement pour éviter l'injection SQL.
+     * Gère les exceptions SQL et retourne `false` en cas d'échec.
+     *
+     * @param id ID de l'individu à supprimer.
+     * @return `true` si la suppression a réussi, `false` sinon.
+     */
     fun deleteById(id: Int): Boolean {
         val sql = "DELETE FROM IndividuMonstre WHERE id = ?"
         val requetePreparer = bdd.connectionBDD!!.prepareStatement(sql)
@@ -175,6 +236,15 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
     }
 
     // --- UTILITAIRE : map ResultSet vers Objet ---
+    /**
+     * Transforme une ligne SQL en [IndividuMonstreEntity].
+     *
+     * Gère les valeurs nullables pour les relations (espece_id, entraineur_equipe_id, entraineur_boite_id)
+     * en utilisant `getObject()` pour détecter la nullité.
+     *
+     * @param rs ResultSet positionné sur la ligne.
+     * @return [IndividuMonstreEntity] correspondant.
+     */
     private fun mapResultSet(rs: java.sql.ResultSet): IndividuMonstreEntity {
         return IndividuMonstreEntity(
             id = rs.getInt("id"),
@@ -194,7 +264,19 @@ class IndividuMonstreDAO(val bdd: BDD = db) {
             entraineurBoiteId = rs.getObject("entraineur_boite_id")?.let { rs.getInt("entraineur_boite_id") }
         )
     }
-
+    // --- CONVERSION ENTITY → MÉTIER --- AZYYY CETAIT HARD
+    /**
+     * Transforme un [IndividuMonstreEntity] en objet métier [IndividuMonstre].
+     *
+     * ⚡ Étapes :
+     * 1. Récupère l'espèce correspondante via [especeMonstreDAO].
+     * 2. Récupère l'entraîneur (équipe ou boîte) via [entraineurDAO].
+     * 3. Crée l'objet [IndividuMonstre].
+     * 4. Réinjecte toutes les valeurs exactes de la base pour éviter la randomisation du constructeur.
+     *
+     * @param entity Entité à convertir.
+     * @return Objet métier [IndividuMonstre] ou `null` si l'espèce n'existe pas.
+     */
     fun toModel(entity: IndividuMonstreEntity): IndividuMonstre? {
         // Récupère l'espèce correspondante
         val espece = entity.especeId?.let { especeMonstreDAO.findById(it) } ?: return null

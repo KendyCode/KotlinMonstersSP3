@@ -12,88 +12,70 @@ import jeu.Partie
 import jdbc.BDD
 import monstre.IndividuMonstreEntity
 
-//La connexion a la BDD
+// --- Connexion à la base de données ---
+// Initialise l'objet BDD pour gérer la connexion et les opérations SQL
 val db = BDD()
-//Les DAO
-val entraineurDAO= EntraineurDAO(db)
-val especeMonstreDAO = EspeceMonstreDAO(db) //  DAO pour les espèces
-val individuMonstreDAO = IndividuMonstreDAO(db)
-val zoneDAO = ZoneDAO(db, especeMonstreDAO)// DAO pour les zones
-// --- Listes depuis la BDD ---
-val listeEntraineur = entraineurDAO.findAll()
-val listeEspeces = especeMonstreDAO.findAll()
-val listeIndividus = individuMonstreDAO.findAll()
-val listeZones = zoneDAO.findAll()
 
+// --- Initialisation des DAO ---
+// Chaque DAO permet d'interagir avec une table spécifique de la base
+val entraineurDAO= EntraineurDAO(db) // Gestion des entraîneurs
+val especeMonstreDAO = EspeceMonstreDAO(db) // Gestion des espèces de monstres
+val individuMonstreDAO = IndividuMonstreDAO(db) // Gestion des individus de monstres
+val zoneDAO = ZoneDAO(db, especeMonstreDAO) // Gestion des zones, nécessite EspeceMonstreDAO pour les relations
 
+// --- Chargement des données depuis la BDD ---
+// Récupération de toutes les données pour initialiser le jeu
+val listeEntraineur = entraineurDAO.findAll() // Liste complète des entraîneurs
+val listeEspeces = especeMonstreDAO.findAll() // Liste complète des espèces de monstres
+val listeIndividus = individuMonstreDAO.findAll() // Liste complète des individus de monstres
+val listeZones = zoneDAO.findAll() // Liste complète des zones du jeu
 
+// --- Création des joueurs initiaux ---
+// Joueur principal et rival du joueur
 var joueur = Entraineur(1, "Sacha", 100)
 var rival = Entraineur(2,"Regis",200)
 
-
-
-
-
+// --- Création d'objets ---
+// Exemples d'objets pouvant être dans le sac du joueur
 var objet1 = MonsterKube(1,"cube", "description",11.0)
 
+// --- Fonction principale ---
 fun main() {
-    println(listeEntraineur[2].equipeMonstre)
-    println(listeZones)
-
-
-//    for (entity in listeIndividus) {
-//
-//        val monstre = individuMonstreDAO.toModel(entity) ?: continue
-//
-//
-//        // Trouver l'entraîneur correspondant à entraineur_equipe_id
-//        val entraineur = listeEntraineur.find { it.id == entity.entraineurEquipeId }
-//
-//        // S’il a un entraîneur, on l’y ajoute
-//        if (entraineur != null) {
-//            monstre.entraineur = entraineur
-//            entraineur.equipeMonstre.add(monstre)
-//        }
-//    }
-//
-//    // 3️⃣ Vérifions que ça marche
-//    for (entraineur in listeEntraineur) {
-//        println("👤 Entraîneur : ${entraineur.nom}")
-//        if (entraineur.equipeMonstre.isEmpty()) {
-//            println("   Aucun monstre dans son équipe.")
-//        } else {
-//            println("   Équipe : ${entraineur.equipeMonstre.joinToString { it.nom }}")
-//        }
-//    }
-
-
-
-
-
-
+    /**
+     * Démarre une nouvelle partie.
+     *
+     * ⚡ Étapes :
+     * 1. Accueille le joueur et lui demande son nom.
+     * 2. Crée une nouvelle instance de Partie avec le joueur et la première zone.
+     * 3. Réinitialise l'ID du joueur pour permettre l'insertion en BDD.
+     * 4. Sauvegarde le joueur dans la base via entraineurDAO.
+     *
+     * @return Partie initialisée pour le joueur.
+     */
     fun nouvellePartie():Partie{
         println("Bienvenue dans le monde magique des Pokémon!")
         println("Rentrez votre nom : ")
-        val nomJoueur = readln()
+        val nomJoueur = readln() // Lecture du nom du joueur depuis la console
         joueur.nom = nomJoueur
 
-
-
+        // Création de la partie avec le joueur et la première zone du jeu
         val PartieJoueur = Partie(1,joueur,listeZones[0])
+
+        // Réinitialisation de l'ID pour insertion en base
         joueur.id=0
-        entraineurDAO.save(joueur)
+        entraineurDAO.save(joueur) // Sauvegarde le joueur dans la BDD
         return PartieJoueur
     }
 
-
-
+    // --- Gestion du sac du joueur ---
+    // Ajoute un objet au sac du joueur avant le début de la partie
     joueur.sacAItems.add(objet1)
 
-    val partie = nouvellePartie()
-    partie.choixStarter()
-
-    db.close()
-    partie.jouer()
+    // --- Démarrage de la partie ---
+    val partie = nouvellePartie() // Crée une nouvelle partie
+    partie.choixStarter() // Permet au joueur de choisir son montre de départ
+    db.close() // Ferme la connexion à la BDD
+    partie.jouer() // Lancement du gameplay principal
 
 
 }

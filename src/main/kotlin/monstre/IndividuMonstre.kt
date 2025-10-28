@@ -6,7 +6,28 @@ import kotlin.math.round
 
 /**
  * Représentation d’un individu tel qu’il est stocké en base de données.
- * (Version simplifiée sans logique de jeu)
+ * Cette classe est une version simplifiée destinée à la persistance des données
+ * et ne contient pas la logique de progression ou de combat.
+ *
+ * Chaque instance correspond à un monstre individuel avec ses statistiques,
+ * son niveau, ses PV actuels, son expérience, et ses relations avec l'espèce
+ * et l'entraîneur.
+ *
+ * @property id Identifiant unique auto-incrémenté ou généré en base.
+ * @property nom Nom du monstre (peut être renommé par l'utilisateur).
+ * @property niveau Niveau actuel de l'individu (entier positif).
+ * @property attaque Statistique d'attaque physique.
+ * @property defense Statistique de défense physique.
+ * @property vitesse Statistique de vitesse, influence l'ordre des combats.
+ * @property attaqueSpe Statistique d'attaque spéciale.
+ * @property defenseSpe Statistique de défense spéciale.
+ * @property pvMax Points de vie maximum que peut avoir le monstre.
+ * @property potentiel Facteur de croissance unique, influe sur l'évolution des stats.
+ * @property exp Expérience cumulée du monstre, utilisée pour les level-ups.
+ * @property pv Points de vie actuels (doit être ≤ pvMax et ≥ 0).
+ * @property especeId Référence à l'espèce de ce monstre (nullable si inconnu).
+ * @property entraineurEquipeId Référence à l'entraîneur si dans l'équipe (nullable).
+ * @property entraineurBoiteId Référence à l'entraîneur si stocké en boîte (nullable).
  */
 data class IndividuMonstreEntity(
     var id: Int = 0,
@@ -27,18 +48,15 @@ data class IndividuMonstreEntity(
 )
 
 /**
- * Représente une instance individuelle d’un monstre appartenant à une [EspeceMonstre].
- *
- * Cette classe encapsule :
- * - Les attributs individuels (statistiques, expérience, niveau)
- * - Les mécanismes de progression (gain d’expérience, montée de niveau)
- * - Les opérations de combat basiques (attaque, gestion des PV)
+ * Classe représentant un monstre individuel en jeu.
+ * Contrairement à la version Entity, cette classe contient la logique de progression
+ * (gain d'expérience, montée de niveau), la gestion des PV, et les mécanismes de combat.
  *
  * @property id Identifiant unique de l’individu.
- * @property nom Nom propre de l’individu (modifiable).
- * @property espece Référence vers l’espèce dont l’individu dérive ses statistiques.
+ * @property nom Nom personnalisable du monstre.
+ * @property espece Espèce dont dépend le monstre pour ses statistiques de base et ses modificateurs.
  * @property entraineur Entraîneur propriétaire (nullable pour les monstres sauvages).
- * @property expInit Expérience initiale injectée à l’initialisation (peut déclencher un level-up immédiat).
+ * @param expInit Expérience initiale à injecter lors de la création (peut provoquer un level-up immédiat).
  */
 class IndividuMonstre(
     var id : Int,
@@ -49,14 +67,16 @@ class IndividuMonstre(
 
     // --- PROPRIÉTÉS DE BASE ---
 
-    /** Niveau actuel de l’individu. */
+    /** Niveau actuel de l’individu, initialisé à 1 par défaut. */
     var niveau : Int = 1
 
 
     /**
-     * Génération des statistiques initiales :
-     * les valeurs sont dérivées des bases d’espèce,
-     * avec une légère variation pseudo-aléatoire ±2 ou ±5 selon la statistique.
+     * Statistiques initiales générées à partir des valeurs de base de l'espèce
+     * avec une petite variation aléatoire pour créer des individus uniques.
+     *
+     * Les variations utilisent des listes ou Random pour simuler une différence légère
+     * entre les individus de la même espèce.
      */
     var attaque : Int = espece.baseAttaque + listOf(-2, 2).random()
     var defense : Int = espece.baseDefense + listOf(-2, 2).random()
@@ -66,10 +86,8 @@ class IndividuMonstre(
     var pvMax : Int = espece.basePv + listOf(-5, 5).random()
 
     /**
-     * Facteur de croissance individuel. Sert de multiplicateur pour la progression
-     * des statistiques à chaque montée de niveau.
-     *
-     * Valeur comprise entre 0.5 et 2.0, exclusive du maximum.
+     * Potentiel de croissance individuelle, valeur décimale entre 0.5 et 2.0.
+     * Il sert de multiplicateur pour la progression des statistiques lors des montées de niveau.
      */
     var potentiel : Double = Random.nextDouble(0.5,2.000001)
 
@@ -77,8 +95,12 @@ class IndividuMonstre(
     // --- EXPÉRIENCE ET PROGRESSION ---
 
     /**
-     * Expérience cumulée de l’individu. L’accesseur `set` déclenche automatiquement
-     * une vérification de palier et des incréments de niveau via [levelUp].
+     * Expérience cumulée de l’individu.
+     * Le setter déclenche automatiquement la vérification du palier et
+     * les level-ups successifs.
+     *
+     * L’utilisation d’une boucle while permet de gérer plusieurs niveaux
+     * gagnés d’un coup si l’expérience est importante.
      */
     var exp : Double = 0.0
         get()=field
@@ -86,7 +108,7 @@ class IndividuMonstre(
             field=value
             var estNiveau1 = niveau==1
 
-            // Boucle de progression : permet plusieurs level-ups consécutifs
+            // Level-up automatique si l'expérience dépasse le palier
             while(field >= palierExp(niveau)){
                 levelUp()
                 if(estNiveau1==false){
@@ -96,7 +118,7 @@ class IndividuMonstre(
 
         }
     init {
-        // Injection de l’expérience initiale avec déclenchement du setter
+        // Injection initiale de l'expérience et déclenchement potentiel de level-up
         this.exp = expInit // applique le setter et déclenche un éventuel level-up
     }
 
@@ -105,38 +127,42 @@ class IndividuMonstre(
 
 
     /**
-     * Calcule l'expérience totale nécessaire pour atteindre un niveau donné.
+     * Calcule le palier d'expérience requis pour atteindre un niveau donné.
+     * Formule quadratique simple : 100 * (niveau - 1)^2
      *
      * @param niveau Niveau cible.
-     * @return Expérience cumulée nécessaire pour atteindre ce niveau.
+     * @return Expérience totale nécessaire pour atteindre ce niveau.
      */
     fun palierExp(niveau : Int) : Double{
         return 100 * ( (niveau - 1).toDouble().pow(2.0) )
     }
 
     /**
-     * Incrémente le niveau et met à jour les statistiques en fonction du [potentiel].
-     * Applique une croissance semi-aléatoire encadrée par les modificateurs d’espèce.
+     * Augmente le niveau du monstre et fait croître ses statistiques
+     * selon le potentiel et les modificateurs de l'espèce.
      *
-     * La méthode préserve les PV relatifs en ajustant [pv] selon la variation de [pvMax].
+     * La croissance est semi-aléatoire pour simuler la variabilité naturelle
+     * entre les individus.
+     *
+     * Les PV sont ajustés proportionnellement et récupèrent les gains.
      */
     fun levelUp() {
         niveau += 1
 
         val ancienPvMax = pvMax
 
-        // Croissance progressive basée sur les modificateurs
+        // Croissance statistique avec facteur de potentiel et variation aléatoire
         attaque += round(espece.modAttaque * potentiel).toInt() + Random.nextInt(-2, 3)
         defense += round(espece.modDefense * potentiel).toInt() + Random.nextInt(-2, 3)
         vitesse += round(espece.modVitesse * potentiel).toInt() + Random.nextInt(-2, 3)
         attaqueSpe += round(espece.modAttaqueSpe * potentiel).toInt() + Random.nextInt(-2, 3)
         defenseSpe += round(espece.modDefenseSpe * potentiel).toInt() + Random.nextInt(-2, 3)
 
-        // 🩸 Amélioration : les PV croissent proportionnellement au potentiel
+        // Croissance des PV proportionnelle au potentiel et modificateur de l'espèce
         val gainPv = round(espece.modPv * potentiel / 5).toInt() + Random.nextInt(-2, 3)
         pvMax += gainPv
 
-        // Le monstre récupère les PV gagnés
+        // Mise à jour des PV actuels en ajoutant les PV gagnés
         pv += gainPv
 
         // On s'assure que les PV ne dépassent pas le max
@@ -147,8 +173,9 @@ class IndividuMonstre(
     // --- POINTS DE VIE ---
 
     /**
-     *  @property pv  Points de vie actuels.
-     * Ne peut pas être inférieur à 0 ni supérieur à [pvMax].
+     * Points de vie actuels de l'individu.
+     * La valeur est automatiquement encadrée entre 0 et pvMax pour éviter
+     * les états invalides.
      */
     var pv : Int = pvMax
         get() = field
@@ -165,15 +192,14 @@ class IndividuMonstre(
     // --- MÉCANIQUES DE COMBAT ---
 
     /**
-     * Exécute une attaque standard sur un autre [IndividuMonstre].
+     * Effectue une attaque physique simple sur une cible.
      *
-     * Formule simplifiée :
-     * ```
-     * dégâts = max(1, attaque - (defense / 2))
-     * ```
-     * Met à jour le PV de la cible et journalise les dégâts infligés.
+     * Formule de calcul simplifiée :
+     * 1. dégât brut = attaque du monstre
+     * 2. réduction = moitié de la défense du monstre (ceci semble une erreur conceptuelle : défense de la cible ?)
+     * 3. dégâts finaux = max(1, dégât brut - réduction)
      *
-     * @param cible Monstre cible de l’attaque.
+     * @param cible Monstre cible de l'attaque.
      */
     fun attaquer(cible: IndividuMonstre){
         var degatBrut = this.attaque
@@ -190,8 +216,8 @@ class IndividuMonstre(
     // --- INTERACTIONS UTILISATEUR ---
 
     /**
-     * Demande au joueur de renommer le monstre.
-     * Si l'utilisateur entre un texte vide, le nom n'est pas modifié.
+     * Permet à l'utilisateur de renommer le monstre.
+     * Si l'entrée est vide, le nom reste inchangé.
      */
     fun renommer() : Unit{
         println("Renommer ${this.nom}")
@@ -202,7 +228,7 @@ class IndividuMonstre(
     }
 
     /**
-     * Affiche les informations détaillées du monstre,
+     * Affiche les informations complètes du monstre,
      * incluant ses statistiques actuelles et son art ASCII.
      */
     fun afficheDetail():Unit{
@@ -235,6 +261,10 @@ class IndividuMonstre(
     """.trimIndent())
 
     }
+    /**
+     * Représentation textuelle simplifiée du monstre.
+     * Utile pour le debug et l'affichage console rapide.
+     */
     override fun toString(): String {
         return "IndividuMonstre(nom=$nom, niveau=$niveau, espece=${espece.nom})"
     }

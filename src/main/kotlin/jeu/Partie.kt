@@ -15,16 +15,19 @@ import org.example.dresseur.Entraineur
 /**
  * Représente une session de jeu active.
  *
- * Une [Partie] relie un [Entraineur] (le joueur) à la [Zone] actuelle du monde.
- * Elle gère :
- * - Le choix du monstre de départ (starter).
- * - L’exploration et les rencontres.
- * - La gestion de l’équipe de monstres du joueur.
- * - Les transitions entre zones.
+ * Une [Partie] relie un [Entraineur] (le joueur) à une [Zone] du monde.
+ * Elle gère la progression du joueur, les rencontres de monstres,
+ * l'équipe de monstres et les transitions entre zones.
+ *
+ * Fonctionnalités principales :
+ * - Choix du monstre de départ (starter)
+ * - Exploration et rencontres de monstres sauvages
+ * - Gestion de l’équipe (affichage, réorganisation)
+ * - Navigation entre zones
  *
  * @property id Identifiant unique de la partie.
  * @property joueur Référence vers l’entraîneur actif.
- * @property zone Zone actuelle dans laquelle se trouve le joueur.
+ * @property zone Zone actuelle dans laquelle le joueur se trouve.
  */
 class Partie(
     var id : Int,
@@ -35,19 +38,19 @@ class Partie(
      * Permet au joueur de choisir son monstre de départ (starter).
      *
      * Trois espèces sont proposées : Springleaf, Flamkip, Aquamy.
-     * Le choix est effectué via une saisie utilisateur.
+     * Le choix est effectué via saisie utilisateur.
      *
      * Étapes :
-     * 1. Génération et affichage des trois starters.
-     * 2. Sélection de l’un d’eux.
-     * 3. Renommage optionnel.
-     * 4. Ajout du monstre dans l’équipe du joueur.
+     * 1. Chargement des espèces depuis la base de données via `especeMonstreDAO`.
+     * 2. Création de trois [IndividuMonstre] avec expérience initiale fixe (1500).
+     * 3. Affichage des détails des trois monstres pour le choix.
+     * 4. Sélection et renommage facultatif.
+     * 5. Ajout du starter choisi dans l'équipe du joueur.
      */
     fun choixStarter(){
 
-        // Création des trois starters prédéfinis avec une expérience initiale fixe
+        // Récupération des espèces depuis la base de données
         val especeSpringleaf = especeMonstreDAO.findByNom("Springleaf").firstOrNull()
-        println(especeSpringleaf?.baseDefense)
         val especeFlamkip = especeMonstreDAO.findByNom("Flamkip").firstOrNull()
         val especeAquamy = especeMonstreDAO.findByNom("Aquamy").firstOrNull()
 
@@ -56,7 +59,7 @@ class Partie(
             return
         }
 
-        // Création des trois starters avec une expérience initiale fixe
+        // Création des trois starters avec ID fictif et expérience initiale
         val monstre1 = IndividuMonstre(1, "Springleaf", especeSpringleaf, joueur, 1500.0)
         println(monstre1.entraineur)
         val monstre2 = IndividuMonstre(2, "Flamkip", especeFlamkip, joueur, 1500.0)
@@ -65,16 +68,17 @@ class Partie(
 
         /**
          * Fonction récursive interne pour gérer le processus de sélection.
-         * Si le joueur saisit une valeur invalide, la fonction se relance.
+         * Si l'utilisateur saisit une valeur invalide, la fonction se relance.
          */
         fun choix(){
-            // Présentation visuelle des trois monstres
+            // Affichage des détails des trois monstres pour guider le choix
             monstre1.afficheDetail()
             monstre2.afficheDetail()
             monstre3.afficheDetail()
 
             println("Chosis entre le monstre 1, 2 et 3")
             var choixSelection = readln().toInt()
+            // Vérification de la validité du choix
             if (choixSelection !in 1..3){
                 choix()
             }
@@ -105,10 +109,13 @@ class Partie(
     /**
      * Permet de modifier manuellement l’ordre des monstres dans l’équipe du joueur.
      *
-     * Cette fonction affiche les indices et les noms, puis échange deux positions
-     * choisies par l’utilisateur.
+     * Fonctionnement :
+     * 1. Affiche l’équipe avec indices.
+     * 2. Demande à l’utilisateur de choisir l’indice du monstre à déplacer.
+     * 3. Demande l’indice de la nouvelle position.
+     * 4. Échange les positions via variable temporaire.
      *
-     * Ne fait rien si l’équipe contient un seul monstre.
+     * Ne fait rien si l’équipe contient moins de deux monstres.
      */
     fun modifierOrdreEquipe(){
         if (joueur.equipeMonstre.size>1){
